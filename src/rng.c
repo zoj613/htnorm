@@ -40,10 +40,10 @@ std_uniform_rand(rng_t* rng_ptr)
 
 
 inline double
-uniform_rand(rng_t* rng_ptr, const double lower, const double upper)
+uniform_rand(rng_t* rng_ptr, const double low, const double high)
 {
     double u = std_uniform_rand(rng_ptr);
-    return lower + (upper - lower) * u;
+    return low + (high - low) * u;
 }
 
 
