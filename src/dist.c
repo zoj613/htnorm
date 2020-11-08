@@ -136,8 +136,8 @@ mv_normal_rand_prec(rng_t* rng, const double* prec, int nrow, bool diag,
         return info;
     }
     
-    double* factor;
-    if ((factor = malloc(sizeof(double) * nrow * nrow)) == NULL)
+    double* factor = malloc(sizeof(double) * nrow * nrow);
+    if (factor == NULL)
         return HTNORM_ALLOC_ERROR;
 
     cblas_dcopy(nrow * nrow, prec, 1, factor, 1);
