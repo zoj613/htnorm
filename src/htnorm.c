@@ -136,8 +136,8 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
 
     mvn_output_t* y1 = mvn_ouput_new(pncol);
     if (y1 == NULL || y1->v == NULL || y1->cov == NULL) {
-        mvn_output_free(y1);
-        return HTNORM_ALLOC_ERROR;
+        info = HTNORM_ALLOC_ERROR;
+        goto y1_failure_cleanup;
     }
 
     mvn_output_t* y2 = mvn_ouput_new(pnrow);
@@ -148,12 +148,12 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
 
     if((info = mv_normal_rand_prec(rng, a->mat, pncol, a_diag, y1)) ||
         (info = mv_normal_rand_prec(rng, omega->mat, pnrow, o_diag, y2)))
-        goto mvn_failure_cleanup;
+        goto y2_failure_cleanup;
 
     double* x = malloc(pnrow * pncol * sizeof(double));
     if (x == NULL) {
         info = HTNORM_ALLOC_ERROR;
-        goto x_failure_cleanup;
+        goto y2_failure_cleanup;
     }
 
     lapack_int* ipiv = malloc(pnrow * sizeof(lapack_int));
@@ -195,10 +195,9 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
     free(ipiv);
 ipiv_failure_cleanup:
     free(x);
-x_failure_cleanup:
-mvn_failure_cleanup:
 y2_failure_cleanup:
     mvn_output_free(y2);
+y1_failure_cleanup:
     mvn_output_free(y1);
  
     return info;
