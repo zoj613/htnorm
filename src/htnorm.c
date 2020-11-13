@@ -5,12 +5,8 @@
 #include <cblas.h>
 #include <lapacke.h>
 
-#include "../include/htnorm.h"
 #include "dist.h"
-
-
-static int htnorm_rand_g_a_vec(const matrix_t* cov, bool diag, const double* g,
-                               double r, double* out);
+#include "../include/htnorm.h"
 
 
 // special case for when g matrix has dimensions 1 by n (a 1d array)
