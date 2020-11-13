@@ -130,13 +130,13 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
     const int pncol = phi->ncol;
     const double* pmat = phi->mat;
 
-    mvn_output_t* y1 = mvn_ouput_new(pncol);
+    mvn_output_t* y1 = mvn_output_new(pncol);
     if (y1 == NULL || y1->v == NULL || y1->cov == NULL) {
         info = HTNORM_ALLOC_ERROR;
         goto y1_failure_cleanup;
     }
 
-    mvn_output_t* y2 = mvn_ouput_new(pnrow);
+    mvn_output_t* y2 = mvn_output_new(pnrow);
     if (y2 == NULL || y2->v == NULL || y2->cov == NULL) {
         info = HTNORM_ALLOC_ERROR;
         goto y2_failure_cleanup;

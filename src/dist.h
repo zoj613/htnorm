@@ -15,7 +15,7 @@ typedef struct mvn_output {
 } mvn_output_t;
 
 
-mvn_output_t* mvn_ouput_new(int nrow);
+mvn_output_t* mvn_output_new(int nrow);
 void mvn_output_free(mvn_output_t* a);
 
 
