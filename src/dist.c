@@ -8,10 +8,6 @@
 #include "dist.h"
 
 
-// https://www.pcg-random.org/using-pcg-c-basic.html#id6
-static inline double std_uniform(rng_t* rng);
-
-
 mvn_output_t*
 mvn_output_new(int nrow)
 {
@@ -33,17 +29,10 @@ mvn_output_free(mvn_output_t* a)
 }
 
 
-static inline double
-std_uniform(rng_t* rng)
-{
-    return ldexp(pcg32_random_r((rng)), -32);
-}
-
-
 double
 uniform_rand(rng_t* rng, double low, double high)
 {
-    double u = std_uniform(rng);
+    double u = rng->next_double(rng->base);
     return low + (high - low) * u;
 }
 
@@ -61,8 +50,8 @@ std_normal_rand(rng_t* rng)
     }
 
     do {
-        u = 2.0 * std_uniform(rng) - 1;
-        v = 2.0 * std_uniform(rng) - 1;
+        u = 2.0 * rng->next_double(rng->base) - 1;
+        v = 2.0 * rng->next_double(rng->base) - 1;
         s = u * u + v * v;
     } while (s >= 1.0);
 
