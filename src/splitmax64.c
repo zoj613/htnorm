@@ -8,7 +8,7 @@ See <http://creativecommons.org/publicdomain/zero/1.0/>. */
 // Original code at: http://xorshift.di.unimi.it/splitmix64.c
 #include "splitmax64.h"
 
-uint64_t
+inline uint64_t
 splitmix64_next64(uint64_t* state)
 {
 	uint64_t z = (*state += 0x9e3779b97f4a7c15);

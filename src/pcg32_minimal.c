@@ -2,7 +2,7 @@
 // Licensed under Apache License 2.0 (NO WARRANTY, etc. see website)
 #include "pcg32_minimal.h"
 
-uint32_t pcg32_random_r(pcg32_random_t* rng)
+inline uint32_t pcg32_random_r(pcg32_random_t* rng)
 {
     uint64_t oldstate = rng->state;
     // Advance internal state

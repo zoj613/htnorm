@@ -8,7 +8,7 @@
 #include "../include/rng.h"
 
 
-void
+inline void
 rng_free(rng_t* rng)
 {
     free(rng->base);
@@ -30,7 +30,7 @@ rng_pcg64_new_seeded(uint64_t seed)
 }
 
 
-rng_t*
+inline rng_t*
 rng_pcg64_new(void)
 {
     uint64_t seed = time(NULL);
@@ -52,7 +52,7 @@ rng_xrs128p_new_seeded(uint64_t seed)
 }
 
 
-rng_t*
+inline rng_t*
 rng_xrs128p_new(void)
 {
     uint64_t seed = time(NULL);
