@@ -91,7 +91,7 @@ mv_normal_rand(rng_t* rng, const double* mean, const double* cov, int nrow,
         cblas_dtrmv(CblasRowMajor, CblasLower, CblasNoTrans, CblasNonUnit,
                     nrow, factor, nrow, out, 1);
         // out = out + mean, where out = L * z
-        for (i = nrow; i--; )
+        for (i = 0; i < nrow; i++)
             out[i] += mean[i];
     }
 
