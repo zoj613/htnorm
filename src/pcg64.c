@@ -12,7 +12,7 @@ pcg32_init(pcg32_random_t* rng, uint64_t* seed)
 }
 
 
-uint64_t
+static uint64_t
 pcg64_next_int(void* rng)
 {
     // https://github.com/imneme/pcg-c-basic/blob/bc39cd76ac3d541e618606bcc6e1e5ba5e5e6aa3/pcg32x2-demo.c#L72-L73
@@ -21,7 +21,7 @@ pcg64_next_int(void* rng)
 }
 
 
-double
+static double
 pcg64_next_double(void* rng)
 {
     // https://github.com/numpy/numpy/blob/509b5ae4a7bb3c99324fd302ead1bbf4b130c741/numpy/random/_common.pxd#L68

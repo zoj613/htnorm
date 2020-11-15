@@ -84,12 +84,12 @@ htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
     // compute: r - g*y
     cblas_dcopy(gnrow, r, 1, gy, 1);
     cblas_dgemv(CblasRowMajor, CblasNoTrans, gnrow, cnrow,
-                -1.0, g->mat, gnrow, out, 1, 1.0, gy, 1);
+                -1.0, g->mat, cnrow, out, 1, 1.0, gy, 1);
 
     // TODO: add code for case when cov is diagonal?
     // compute: g * cov
     cblas_dsymm(CblasRowMajor, CblasRight, CblasUpper, gnrow, cnrow,
-                1.0, cov->mat, cnrow, g->mat, gnrow, 0.0, cov_g, gnrow); 
+                1.0, cov->mat, cnrow, g->mat, cnrow, 0.0, cov_g, cnrow); 
 
     // compute: g * cov * g^T
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, gnrow, gnrow, cnrow,
@@ -160,7 +160,7 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
 
     // compute: x = phi * A_inv
     cblas_dsymm(CblasRowMajor, CblasRight, CblasUpper, pnrow, pncol,
-                1.0, y1->cov, pncol, pmat, pnrow, 0.0, x, pnrow); 
+                1.0, y1->cov, pncol, pmat, pncol, 0.0, x, pncol); 
 
     // compute: phi * A_inv * phi^T + omega_inv
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, pnrow, pnrow, pncol,
@@ -180,7 +180,7 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
         info = LAPACKE_dgetrs(LAPACK_ROW_MAJOR, 'N', pnrow, 1, y2->cov,
                               pnrow, ipiv, y2->v, pnrow);
         if (!info) {
-            // compute: A_inv * phi^T * alpha + mean + y1
+            // compute: -A_inv * phi^T * alpha + mean + y1
             cblas_dgemv(CblasRowMajor, CblasTrans, pnrow, pncol,
                         -1.0, x, pncol, y2->v, 1, 1.0, y1->v, 1);
 

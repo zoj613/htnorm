@@ -26,7 +26,7 @@ rotl(const uint64_t x, int k)
 }
 
 
-uint64_t
+static uint64_t
 xrs128p_next_int(void* rng)
 {
     xrs128p_random_t* xrs = rng;
@@ -42,7 +42,7 @@ xrs128p_next_int(void* rng)
 }
 
 
-double
+static double
 xrs128p_next_double(void* rng)
 {
     // https://github.com/numpy/numpy/blob/509b5ae4a7bb3c99324fd302ead1bbf4b130c741/numpy/random/_common.pxd#L68
