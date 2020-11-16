@@ -3,9 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <cblas.h>
-#include <lapacke.h>
-
+#include "blas.h"
 #include "dist.h"
 
 
@@ -82,14 +80,13 @@ mv_normal_rand(rng_t* rng, const double* mean, const double* cov, int nrow,
     if (factor == NULL)
         return HTNORM_ALLOC_ERROR;
 
-    memcpy(factor, cov, factor_size); 
     // do cholesky factorization and store result in lower tringular part
-    info = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', nrow, factor, nrow);  
+    memcpy(factor, cov, factor_size); 
+    info = POTRF(nrow, factor, nrow);  
     if (!info) {
         // triangular matrix-vector product. L * z.
         std_normal_rand_fill(rng, nrow, out);
-        cblas_dtrmv(CblasRowMajor, CblasLower, CblasNoTrans, CblasNonUnit,
-                    nrow, factor, nrow, out, 1);
+        TRMV(nrow, factor, nrow, out, 1);
         // out = out + mean, where out = L * z
         for (i = nrow; i--; )
             out[i] += mean[i];
@@ -124,19 +121,16 @@ mv_normal_rand_prec(rng_t* rng, const double* prec, int nrow, bool diag,
         return HTNORM_ALLOC_ERROR;
 
     memcpy(factor, prec, factor_size); 
-    // do cholesky factorization and store result in Lower tringular part
-    info = LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', nrow, factor, nrow);
+    info = POTRF(nrow, factor, nrow);
     if (!info) {
         // sample from N(0, prec) using cholesky factor (i.e, calculate L * z)
         std_normal_rand_fill(rng, nrow, out->v);
-        cblas_dtrmv(CblasRowMajor, CblasLower, CblasNoTrans, CblasNonUnit,
-                    nrow, factor, nrow, out->v, 1);
+        TRMV(nrow, factor, nrow, out->v, 1);
         // solve system using cholesky factor to get: out ~ N(0, prec_inv)
-        info = LAPACKE_dpotrs(LAPACK_ROW_MAJOR, 'L', nrow, 1,
-                              factor, nrow, out->v, nrow); 
+        info = POTRS(nrow, 1, factor, nrow, out->v, nrow); 
         if (!info) {
             // calculate the explicit inverse needed with the output
-            info = LAPACKE_dpotri(LAPACK_ROW_MAJOR, 'L', nrow, factor, nrow);
+            info = POTRI(nrow, factor, nrow);
             // replace cov with factor to avoid a copy of the contents
             free(out->cov);
             out->cov = factor;

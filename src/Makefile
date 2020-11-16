@@ -3,10 +3,10 @@
 NAME := htnorm
 CC := gcc
 
-CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pthread -pedantic -DNDEBUG -g \
-    	-ffast-math -Wall -Wextra -Werror -Wsign-compare -Wno-unused-result \
-	-Wpointer-arith -Wcast-qual -Wmissing-prototypes -Wno-missing-braces \
-	-Wunused
+CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pthread -pedantic -g \
+	-DNDEBUG -ffast-math -Wall -Wextra -Werror -Wsign-compare -Wunused \
+	-Wno-unused-result -Wpointer-arith -Wcast-qual -Wmissing-prototypes \
+	-Wno-missing-braces
 
 INCLUDE_DIRS := -I. -I../include -I/usr/include
 
