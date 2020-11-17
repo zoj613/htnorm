@@ -4,8 +4,6 @@
  *
  * Modifications and content in this file is published under the BSD-3 license.
  */
-#include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 
 #include "splitmax64.h"

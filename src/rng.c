@@ -1,7 +1,6 @@
 /* Copyright (c) 2020, Zolisa Bleki
  *
  * SPDX-License-Identifier: BSD-3-Clause */
-#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 

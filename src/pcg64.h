@@ -4,7 +4,6 @@
 #ifndef HTNORM_PCG64_H
 #define HTNORM_PCG64_H
 
-#include <stdint.h>
 #include "pcg32_minimal.h"
 
 typedef struct pcg64_rand{

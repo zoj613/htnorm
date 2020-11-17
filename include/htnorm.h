@@ -6,7 +6,7 @@
 
 #include <stdbool.h>
 
-#include "../src/dist.h"
+#include "rng.h"
 
 typedef struct matrix {
     int nrow;
