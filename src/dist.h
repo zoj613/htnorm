@@ -15,12 +15,12 @@ typedef struct mvn_output {
 } mvn_output_t;
 
 
-mvn_output_t* mvn_output_new(int nrow);
+mvn_output_t* mvn_output_new(size_t nrow);
 void mvn_output_free(mvn_output_t* a);
 
-int mv_normal_rand(rng_t* rng, const double* mean, const double* mat, int nrow,
-                   bool diag, double* out);
-int mv_normal_rand_prec(rng_t* rng, const double* prec, int nrow, bool diag,
-                        mvn_output_t* out, bool full_inv);
+int mv_normal_rand(rng_t* rng, const double* mean, const double* mat,
+                   size_t nrow, bool diag, double* out);
+int mv_normal_rand_prec(rng_t* rng, const double* prec, size_t nrow,
+                        bool diag, mvn_output_t* out, bool full_inv);
 
 #endif

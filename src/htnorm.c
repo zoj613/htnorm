@@ -1,4 +1,6 @@
+#include <lapacke.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -12,9 +14,12 @@ htnorm_rand_g_a_vec(const matrix_t* cov, bool diag, const double* g,
                     double r, double* out)
 {
     const size_t cncol = cov->ncol;
-    double alpha = 0;
-    double g_cov_g = 0;
+    double alpha = 0, g_cov_g = 0;
     size_t i, j;
+
+    double* cov_g = calloc(cncol, sizeof(*cov_g));
+    if (cov_g == NULL)
+        return HTNORM_ALLOC_ERROR;
 
     // compute: r - g * y; where y ~ N(mean, cov)
     for (i = cncol; i--; )
@@ -22,12 +27,8 @@ htnorm_rand_g_a_vec(const matrix_t* cov, bool diag, const double* g,
     alpha = r - alpha;
 
     // compute: cov * g^T
-    double* cov_g = malloc(cncol * sizeof(*cov_g));
-    if (cov_g == NULL)
-        return HTNORM_ALLOC_ERROR;
-
-    // optimize when cov if diagonal
     if (diag) {
+        // optimize when cov if diagonal
         for (i = cncol; i--; )
             cov_g[i] = cov->mat[cncol * i + i] * g[i];
     }
@@ -52,50 +53,58 @@ int
 htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
             bool diag, const matrix_t* g, const double* r, double* out)
 {
-    const int cnrow = cov->nrow;
-    const int gnrow = g->nrow;
+    const size_t gncol = g->ncol;
+    const size_t gnrow = g->nrow;
+    const double* gmat = g->mat;
 
-    lapack_int info = mv_normal_rand(rng, mean, cov->mat, cnrow, diag, out);
+    lapack_int info = mv_normal_rand(rng, mean, cov->mat, gncol, diag, out);
     // early return upon failure
     if (info)
         return info;
     // check if g's number of rows is 1 and use an optimized function
     if (gnrow == 1)
-        return htnorm_rand_g_a_vec(cov, diag, g->mat, *r, out);
+        return htnorm_rand_g_a_vec(cov, diag, gmat, *r, out);
 
-    const size_t gy_size = gnrow * sizeof(double);
-    double* gy = malloc(gy_size);
+    double* gy = calloc(gnrow, sizeof(*gy));
     if (gy == NULL)
         return HTNORM_ALLOC_ERROR;
 
-    double* cov_g = malloc(gnrow * cnrow * sizeof(double));
+    double* cov_g = calloc(gnrow * gncol, sizeof(*cov_g));
     if (cov_g == NULL) {
         info = HTNORM_ALLOC_ERROR;
         goto covg_failure_cleanup;
     }
 
-    double* g_cov_g = malloc(gnrow * gnrow * sizeof(double));
+    double* g_cov_g = calloc(gnrow * gnrow, sizeof(*g_cov_g));
     if (g_cov_g == NULL) {
         info = HTNORM_ALLOC_ERROR;
         goto gcovg_failure_cleanup;
     }
-    // compute: r - g*y
-    memcpy(gy, r, gy_size); 
-    GEMV(gnrow, cnrow, -1.0, g->mat, cnrow, out, 1, 1.0, gy, 1);
-    // TODO: add code for case when cov is diagonal?
-    // compute: g * cov
-    SYMM(gnrow, cnrow, 1.0, cov->mat, cnrow, g->mat, cnrow, 0.0, cov_g, cnrow); 
-    // compute: g * cov * g^T
-    GEMM(gnrow, gnrow, cnrow, 1.0, cov_g, cnrow, g->mat, cnrow, 0.0, g_cov_g, gnrow);
 
+    // compute: r - g*y
+    memcpy(gy, r, gnrow * sizeof(*gy)); 
+    GEMV(gnrow, gncol, -1.0, gmat, gncol, out, 1, 1.0, gy, 1);
+    // compute: cov * g^T
+    if (diag) {
+        for (size_t i = 0; i < gncol; i++)
+            for (size_t j = 0; j < gnrow; j++)
+                cov_g[gnrow * i + j] = cov->mat[gncol * i + i] * gmat[gncol * j + i];
+    }
+    else {
+        GEMM_NT(gncol, gnrow, gncol, 1.0, cov->mat, gncol, gmat,
+                gncol, 0.0, cov_g, gnrow); 
+    }
+    // compute: g * cov * g^T
+    GEMM(gnrow, gnrow, gncol, 1.0, gmat, gncol, cov_g, gnrow, 0.0, g_cov_g, gnrow);
+    // factorize g_cov_g using cholesky method.
     info = POTRF(gnrow, g_cov_g, gnrow);
     if (!info) {                      
         // solve a system of linear equations: g * cov * g^T * alpha = r - g*y
         // value of alpha is store in `gy` array.
-        info = POTRS(gnrow, 1, g_cov_g, gnrow, gy, gnrow);
+        info = POTRS(gnrow, 1, g_cov_g, gnrow, gy, 1); 
         // compute: out = cov * g^T * alpha + out
         if (!info)  
-            GEMV(gnrow, cnrow, 1.0, cov_g, cnrow, gy, 1, 1.0, out, 1);
+            GEMV(gncol, gnrow, 1.0, cov_g, gnrow, gy, 1, 1.0, out, 1);
     }
 
     free(g_cov_g); 
@@ -113,8 +122,8 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
              const matrix_t* phi, const matrix_t* omega, bool o_diag, double* out)
 {
     lapack_int info;
-    const int pnrow = phi->nrow;
-    const int pncol = phi->ncol;
+    const size_t pnrow = phi->nrow;
+    const size_t pncol = phi->ncol;
     const double* pmat = phi->mat;
 
     mvn_output_t* y1 = mvn_output_new(pncol);
@@ -133,47 +142,32 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
         (info = mv_normal_rand_prec(rng, omega->mat, pnrow, o_diag, y2, true)))
         goto y2_failure_cleanup;
 
-    double* x = malloc(pnrow * pncol * sizeof(double));
+    double* x = calloc(pnrow * pncol, sizeof(*x));
     if (x == NULL) {
         info = HTNORM_ALLOC_ERROR;
         goto y2_failure_cleanup;
     }
 
-    lapack_int* ipiv = malloc(pnrow * sizeof(lapack_int));
-    if (x == NULL) {
-        info = HTNORM_ALLOC_ERROR;
-        goto ipiv_failure_cleanup;
-    }
-
-
-    // compute: x = phi * A_inv
-    SYMM(pnrow, pncol, 1.0, y1->cov, pncol, pmat, pncol, 0.0, x, pncol); 
-
+    // compute: x = A_inv * phi^T
+    GEMM_NT(pncol, pnrow, pncol, 1.0, a->mat, pncol, pmat, pncol, 0.0, x, pnrow);
     // compute: phi * A_inv * phi^T + omega_inv
-    GEMM(pnrow, pnrow, pncol, 1.0, x, pncol, pmat, pncol, 1.0, y2->cov, pnrow);
-
+    GEMM(pnrow, pnrow, pncol, 1.0, pmat, pncol, x, pnrow, 1.0, y2->cov, pnrow);
     // compute: phi * y1 + y2
     GEMV(pnrow, pncol, 1.0, pmat, pncol, y1->v, 1, 1.0, y2->v, 1);
 
     // compute: mean + y1
     for (size_t i = pncol; i--; )
-        y1->v[i] += mean[i];
+        out[i] = y1->v[i] + mean[i];
 
     // solve for alpha: (omega_inv + phi * A_inv * phi^T) * alpha = phi * y1 + y2
-    // compute LU factorization to get ipiv (pivoting indices) which is stored
-    info = GETRF(pnrow, pnrow, y2->cov, pnrow, ipiv);
+    info = POTRF(pnrow, y2->cov, pnrow);
     if (!info) {
-        info = GETRS(pnrow, 1, y2->cov, pnrow, ipiv, y2->v, pnrow);
-        if (!info) {
+        info = POTRS(pnrow, 1, y2->cov, pnrow, y2->v, 1);
+        if (!info)
             // compute: -A_inv * phi^T * alpha + mean + y1
-            GEMV(pnrow, pncol, -1.0, x, pncol, y2->v, 1, 1.0, y1->v, 1);
-
-            memcpy(out, y1->v, pnrow * sizeof(double)); 
-        }
+            GEMV(pncol, pnrow, -1.0, x, pnrow, y2->v, 1, 1.0, out, 1);
     } 
 
-    free(ipiv);
-ipiv_failure_cleanup:
     free(x);
 y2_failure_cleanup:
     mvn_output_free(y2);

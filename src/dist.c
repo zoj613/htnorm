@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -42,12 +43,12 @@ std_normal_rand_fill(rng_t* rng, int n, double* out)
 
 
 inline mvn_output_t*
-mvn_output_new(int nrow)
+mvn_output_new(size_t nrow)
 {
     mvn_output_t* out = malloc(sizeof(mvn_output_t));
     if (out != NULL) {
-        out->v = malloc(nrow * sizeof(double));
-        out->cov = calloc(nrow * nrow, sizeof(double));
+        out->v = calloc(nrow, sizeof(*out->v));
+        out->cov = calloc(nrow * nrow, sizeof(*out->cov));
     }
     return out;
 }
@@ -56,18 +57,18 @@ mvn_output_new(int nrow)
 inline void
 mvn_output_free(mvn_output_t* a)
 {
-    free(a->v);
     free(a->cov);
+    free(a->v);
     free(a);
 }
 
 
 int
-mv_normal_rand(rng_t* rng, const double* mean, const double* cov, int nrow,
+mv_normal_rand(rng_t* rng, const double* mean, const double* cov, size_t nrow,
                bool diag, double* out)
 {
     lapack_int info = 0;
-    int i;
+    size_t i;
 
     if (diag) {
         for (i = nrow; i--; )
@@ -75,13 +76,12 @@ mv_normal_rand(rng_t* rng, const double* mean, const double* cov, int nrow,
         return info;
     }
     
-    const size_t factor_size = nrow * nrow * sizeof(double);
-    double* factor = malloc(factor_size);
+    double* factor = calloc(nrow * nrow, sizeof(*factor));
     if (factor == NULL)
         return HTNORM_ALLOC_ERROR;
 
-    // do cholesky factorization and store result in lower tringular part
-    memcpy(factor, cov, factor_size); 
+    // do cholesky factorization.
+    memcpy(factor, cov, nrow * nrow * sizeof(*cov));
     info = POTRF(nrow, factor, nrow);  
     if (!info) {
         // triangular matrix-vector product. L * z.
@@ -98,16 +98,14 @@ mv_normal_rand(rng_t* rng, const double* mean, const double* cov, int nrow,
 
 
 int
-mv_normal_rand_prec(rng_t* rng, const double* prec, int nrow, bool diag,
+mv_normal_rand_prec(rng_t* rng, const double* prec, size_t nrow, bool diag,
                     mvn_output_t* out, bool full_inv)
 {
     lapack_int info = 0;
-    int i;
-
     // if precision is diagonal then use a direct way to calculate output.
     if (diag) {
         size_t diag_index; 
-        for (i = nrow; i--; ) {
+        for (size_t i = nrow; i--; ) {
             diag_index = nrow * i + i;
             out->cov[diag_index] = 1.0 / prec[diag_index]; 
             out->v[i] = std_normal_rand(rng) / sqrt(out->cov[diag_index]);
@@ -115,12 +113,11 @@ mv_normal_rand_prec(rng_t* rng, const double* prec, int nrow, bool diag,
         return info;
     }
 
-    const size_t factor_size = nrow * nrow * sizeof(double);
-    double* factor = malloc(factor_size);
+    double* factor = calloc(nrow * nrow, sizeof(*factor));
     if (factor == NULL)
         return HTNORM_ALLOC_ERROR;
 
-    memcpy(factor, prec, factor_size); 
+    memcpy(factor, prec, nrow * nrow * sizeof(*prec));
     info = POTRF(nrow, factor, nrow);
     if (!info) {
         // sample from N(0, prec) using cholesky factor (i.e, calculate L * z)
@@ -135,8 +132,8 @@ mv_normal_rand_prec(rng_t* rng, const double* prec, int nrow, bool diag,
             free(out->cov);
             out->cov = factor;
             if (full_inv)
-                for (i = 0; i < nrow; i++)
-                    for (int j = 0; j < i; j++)
+                for (size_t i = 0; i < nrow; i++)
+                    for (size_t j = 0; j < i; j++)
                         out->cov[nrow * j + i] = out->cov[nrow * i + j];
 
             return info;

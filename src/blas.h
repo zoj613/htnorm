@@ -17,11 +17,19 @@
     cblas_dgemv(CblasRowMajor, CblasNoTrans, (m), (n), (alpha), (a), (lda), \
     (x), (incx), (beta), (y), (incy))
 
+#define GEMV_T(m, n, alpha, a, lda, x, incx, beta, y, incy) \
+    cblas_dgemv(CblasRowMajor, CblasTrans, (m), (n), (alpha), (a), (lda), \
+    (x), (incx), (beta), (y), (incy))
+
 #define SYMM(m, n, alpha, a, lda, b, ldb, beta, c, ldc) \
     cblas_dsymm(CblasRowMajor, CblasRight, CblasUpper, (m), (n), (alpha), (a), \
     (lda), (b), (ldb), (beta), (c), (ldc))
 
 #define GEMM(m, n, k, alpha, a, lda, b, ldb, beta, c, ldc) \
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (m), (n), (k), \
+    (alpha), (a), (lda), (b), (ldb), (beta), (c), (ldc))
+
+#define GEMM_NT(m, n, k, alpha, a, lda, b, ldb, beta, c, ldc) \
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, (m), (n), (k), \
     (alpha), (a), (lda), (b), (ldb), (beta), (c), (ldc))
 
