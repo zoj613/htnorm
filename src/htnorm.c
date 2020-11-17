@@ -1,6 +1,7 @@
-#include <lapacke.h>
+/* Copyright (c) 2020, Zolisa Bleki
+ *
+ * SPDX-License-Identifier: BSD-3-Clause */
 #include <stdlib.h>
-#include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 

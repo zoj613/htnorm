@@ -1,3 +1,6 @@
+/* Copyright (c) 2020, Zolisa Bleki
+ *
+ * SPDX-License-Identifier: BSD-3-Clause */
 #ifndef HTNORM_PCG64_H
 #define HTNORM_PCG64_H
 

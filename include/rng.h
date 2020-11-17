@@ -1,3 +1,6 @@
+/* Copyright (c) 2020, Zolisa Bleki
+ *
+ * SPDX-License-Identifier: BSD-3-Clause */
 #ifndef HTNORM_RNG_H
 #define HTNORM_RNG_H
 
