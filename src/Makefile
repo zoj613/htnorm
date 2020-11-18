@@ -3,7 +3,7 @@
 NAME := htnorm
 CC := gcc
 
-CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pthread -pedantic -g \
+CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pedantic -g \
 	-DNDEBUG -ffast-math -Wall -Wextra -Werror -Wsign-compare -Wunused \
 	-Wno-unused-result -Wpointer-arith -Wcast-qual -Wmissing-prototypes \
 	-Wno-missing-braces

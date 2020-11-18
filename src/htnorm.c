@@ -10,36 +10,35 @@
 
 // special case for when g matrix has dimensions 1 by n (a 1d array)
 static int
-htnorm_rand_g_a_vec(const matrix_t* cov, bool diag, const double* g,
+htnorm_rand_g_a_vec(const double* cov, size_t ncol, bool diag, const double* g,
                     double r, double* out)
 {
-    const size_t cncol = cov->ncol;
     double alpha = 0, g_cov_g = 0;
     size_t i, j;
 
-    double* cov_g = calloc(cncol, sizeof(*cov_g));
+    double* cov_g = calloc(ncol, sizeof(*cov_g));
     if (cov_g == NULL)
         return HTNORM_ALLOC_ERROR;
 
     // compute: r - g * y; where y ~ N(mean, cov)
-    for (i = cncol; i--; )
+    for (i = ncol; i--; )
         alpha +=  g[i] * out[i]; 
     alpha = r - alpha;
 
     // compute: cov * g^T
     if (diag) {
         // optimize when cov if diagonal
-        for (i = cncol; i--; )
-            cov_g[i] = cov->mat[cncol * i + i] * g[i];
+        for (i = ncol; i--; )
+            cov_g[i] = cov[ncol * i + i] * g[i];
     }
     else {
-        SYMV(cncol, 1.0, cov->mat, cncol, g, 1, 0.0, cov_g, 1);
+        SYMV(ncol, 1.0, cov, ncol, g, 1, 0.0, cov_g, 1);
     }
 
     // out = y + cov * g^T * alpha, where alpha = (r - g * y) / (g * cov * g^T)
-    for (i = cncol; i--; ) {
+    for (i = ncol; i--; ) {
         g_cov_g = 0;
-        for (j = cncol; j--; )
+        for (j = ncol; j--; )
             g_cov_g += g[j] * cov_g[j];
         out[i] += alpha * (cov_g[i] / g_cov_g);
     } 
@@ -53,17 +52,18 @@ int
 htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
             bool diag, const matrix_t* g, const double* r, double* out)
 {
-    const size_t gncol = g->ncol;
+    const size_t gncol = g->ncol;  // equal to the dimension of the covariance
     const size_t gnrow = g->nrow;
     const double* gmat = g->mat;
+    const double* cmat = cov->mat;
 
-    lapack_int info = mv_normal_rand(rng, mean, cov->mat, gncol, diag, out);
+    lapack_int info = mv_normal_rand(rng, mean, cmat, gncol, diag, out);
     // early return upon failure
     if (info)
         return info;
     // check if g's number of rows is 1 and use an optimized function
     if (gnrow == 1)
-        return htnorm_rand_g_a_vec(cov, diag, gmat, *r, out);
+        return htnorm_rand_g_a_vec(cmat, gncol, diag, gmat, *r, out);
 
     double* gy = calloc(gnrow, sizeof(*gy));
     if (gy == NULL)
@@ -88,15 +88,14 @@ htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
     if (diag) {
         for (size_t i = 0; i < gncol; i++)
             for (size_t j = 0; j < gnrow; j++)
-                cov_g[gnrow * i + j] = cov->mat[gncol * i + i] * gmat[gncol * j + i];
+                cov_g[gnrow * i + j] = cmat[gncol * i + i] * gmat[gncol * j + i];
     }
     else {
-        GEMM_NT(gncol, gnrow, gncol, 1.0, cov->mat, gncol, gmat,
-                gncol, 0.0, cov_g, gnrow); 
+        GEMM_NT(gncol, gnrow, gncol, 1.0, cmat, gncol, gmat, gncol, 0.0, cov_g, gnrow); 
     }
     // compute: g * cov * g^T
     GEMM(gnrow, gnrow, gncol, 1.0, gmat, gncol, cov_g, gnrow, 0.0, g_cov_g, gnrow);
-    // factorize g_cov_g using cholesky method.
+    // factorize g_cov_g using cholesky method and store in upper triangular part.
     info = POTRF(gnrow, g_cov_g, gnrow);
     if (!info) {                      
         // solve a system of linear equations: g * cov * g^T * alpha = r - g*y
@@ -125,6 +124,7 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
     const size_t pnrow = phi->nrow;
     const size_t pncol = phi->ncol;
     const double* pmat = phi->mat;
+    const double* amat = a->mat;
 
     mvn_output_t* y1 = mvn_output_new(pncol);
     if (y1 == NULL || y1->v == NULL || y1->cov == NULL) {
@@ -138,7 +138,7 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
         goto y2_failure_cleanup;
     }
 
-    if((info = mv_normal_rand_prec(rng, a->mat, pncol, a_diag, y1, false)) ||
+    if((info = mv_normal_rand_prec(rng, amat, pncol, a_diag, y1, false)) ||
         (info = mv_normal_rand_prec(rng, omega->mat, pnrow, o_diag, y2, true)))
         goto y2_failure_cleanup;
 
@@ -149,7 +149,7 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
     }
 
     // compute: x = A_inv * phi^T
-    GEMM_NT(pncol, pnrow, pncol, 1.0, a->mat, pncol, pmat, pncol, 0.0, x, pnrow);
+    GEMM_NT(pncol, pnrow, pncol, 1.0, amat, pncol, pmat, pncol, 0.0, x, pnrow);
     // compute: phi * A_inv * phi^T + omega_inv
     GEMM(pnrow, pnrow, pncol, 1.0, pmat, pncol, x, pnrow, 1.0, y2->cov, pnrow);
     // compute: phi * y1 + y2

@@ -31,7 +31,7 @@ std_normal_rand(rng_t* rng)
     y = v * z;
     x = u * z;
     cached = true;
-    return x; 
+    return x;
 }
 
 
@@ -76,18 +76,18 @@ mv_normal_rand(rng_t* rng, const double* mean, const double* cov, size_t nrow,
             out[i] = mean[i] + sqrt(cov[nrow * i + i]) * std_normal_rand(rng);
         return info;
     }
-    
+
     double* factor = calloc(nrow * nrow, sizeof(*factor));
     if (factor == NULL)
         return HTNORM_ALLOC_ERROR;
 
     // do cholesky factorization.
-    memcpy(factor, cov, nrow * nrow * sizeof(*cov));
-    info = POTRF(nrow, factor, nrow);  
+    memcpy(factor, cov, nrow * nrow * sizeof(*factor));
+    info = POTRF(nrow, factor, nrow);
     if (!info) {
-        // triangular matrix-vector product. L * z.
+        // triangular matrix-vector product. U^T * z.
         std_normal_rand_fill(rng, nrow, out);
-        TRMV(nrow, factor, nrow, out, 1);
+        TRMV_T(nrow, factor, nrow, out, 1);
         // out = out + mean, where out = L * z
         for (i = nrow; i--; )
             out[i] += mean[i];
@@ -105,10 +105,10 @@ mv_normal_rand_prec(rng_t* rng, const double* prec, size_t nrow, bool diag,
     lapack_int info = 0;
     // if precision is diagonal then use a direct way to calculate output.
     if (diag) {
-        size_t diag_index; 
+        size_t diag_index;
         for (size_t i = nrow; i--; ) {
             diag_index = nrow * i + i;
-            out->cov[diag_index] = 1.0 / prec[diag_index]; 
+            out->cov[diag_index] = 1.0 / prec[diag_index];
             out->v[i] = std_normal_rand(rng) / sqrt(out->cov[diag_index]);
         }
         return info;
@@ -121,11 +121,11 @@ mv_normal_rand_prec(rng_t* rng, const double* prec, size_t nrow, bool diag,
     memcpy(factor, prec, nrow * nrow * sizeof(*prec));
     info = POTRF(nrow, factor, nrow);
     if (!info) {
-        // sample from N(0, prec) using cholesky factor (i.e, calculate L * z)
+        // sample from N(0, prec) using cholesky factor (i.e, calculate U^T * z)
         std_normal_rand_fill(rng, nrow, out->v);
-        TRMV(nrow, factor, nrow, out->v, 1);
+        TRMV_T(nrow, factor, nrow, out->v, 1);
         // solve system using cholesky factor to get: out ~ N(0, prec_inv)
-        info = POTRS(nrow, 1, factor, nrow, out->v, nrow); 
+        info = POTRS(nrow, 1, factor, nrow, out->v, nrow);
         if (!info) {
             // calculate the explicit inverse needed with the output
             info = POTRI(nrow, factor, nrow);

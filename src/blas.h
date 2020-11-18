@@ -9,7 +9,11 @@
 
 /* CBLAS macros */
 #define TRMV(n, a, lda, x, incx) \
-    cblas_dtrmv(CblasRowMajor, CblasLower, CblasNoTrans, CblasNonUnit, \
+    cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, \
+    (n), (a), (lda), (x), (incx))
+
+#define TRMV_T(n, a, lda, x, incx) \
+    cblas_dtrmv(CblasRowMajor, CblasUpper, CblasTrans, CblasNonUnit, \
     (n), (a), (lda), (x), (incx))
 
 #define SYMV(n, alpha, a, lda, x, incx, beta, y, incy) \
@@ -46,12 +50,12 @@
     LAPACKE_dgetrs(LAPACK_ROW_MAJOR, 'N', (n), (nrhs), (a), (lda), (ipiv), (b), (ldb))
 
 #define POTRF(n, a, lda) \
-    LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'L', (n), (a), (lda))
+    LAPACKE_dpotrf(LAPACK_ROW_MAJOR, 'U', (n), (a), (lda))
 
 #define POTRS(n, nrhs, a, lda, b, ldb) \
-    LAPACKE_dpotrs(LAPACK_ROW_MAJOR, 'L', (n), (nrhs), (a), (lda), (b), (ldb))
+    LAPACKE_dpotrs(LAPACK_ROW_MAJOR, 'U', (n), (nrhs), (a), (lda), (b), (ldb))
 
 #define POTRI(n, a, lda) \
-    LAPACKE_dpotri(LAPACK_ROW_MAJOR, 'L', (n), (a), (lda))
+    LAPACKE_dpotri(LAPACK_ROW_MAJOR, 'U', (n), (a), (lda))
 
 #endif
