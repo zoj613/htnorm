@@ -52,7 +52,9 @@ int
 htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
             bool diag, const matrix_t* g, const double* r, double* out)
 {
+#ifdef NONANS
     TURNOFF_NAN_CHECK;
+#endif
     const size_t gncol = g->ncol;  // equal to the dimension of the covariance
     const size_t gnrow = g->nrow;
     const double* gmat = g->mat;
@@ -117,7 +119,9 @@ int
 htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
              const matrix_t* phi, const matrix_t* omega, bool o_diag, double* out)
 {
+#ifdef NONANS
     TURNOFF_NAN_CHECK;
+#endif
     lapack_int info;
     const size_t pnrow = phi->nrow;
     const size_t pncol = phi->ncol;

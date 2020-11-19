@@ -68,8 +68,9 @@ int
 mv_normal_rand(rng_t* rng, const double* mean, const double* cov, size_t nrow,
                bool diag, double* out)
 {
+#ifdef NONANS
     TURNOFF_NAN_CHECK;
-
+#endif
     lapack_int info = 0;
     size_t i;
 
@@ -104,7 +105,9 @@ int
 mv_normal_rand_prec(rng_t* rng, const double* prec, size_t nrow, bool diag,
                     mvn_output_t* out, bool full_inv)
 {
+#ifdef NONANS
     TURNOFF_NAN_CHECK;
+#endif
     lapack_int info = 0;
     // if precision is diagonal then use a direct way to calculate output.
     if (diag) {
