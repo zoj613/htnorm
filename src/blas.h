@@ -7,6 +7,9 @@
 #include <cblas.h>
 #include <lapacke.h>
 
+
+#define TURNOFF_NAN_CHECK LAPACKE_set_nancheck(0)
+
 /* CBLAS macros */
 #define TRMV(n, a, lda, x, incx) \
     cblas_dtrmv(CblasRowMajor, CblasUpper, CblasNoTrans, CblasNonUnit, \
@@ -57,5 +60,8 @@
 
 #define POTRI(n, a, lda) \
     LAPACKE_dpotri(LAPACK_ROW_MAJOR, 'U', (n), (a), (lda))
+
+#define POSV(n, nrhs, a, lda, b, ldb) \
+    LAPACKE_dposv(LAPACK_ROW_MAJOR, 'U', (n), (nrhs), (a), (lda), (b), (ldb))
 
 #endif

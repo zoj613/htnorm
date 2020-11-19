@@ -16,7 +16,7 @@ htnorm_rand_g_a_vec(const double* cov, size_t ncol, bool diag, const double* g,
     double alpha = 0, g_cov_g = 0;
     size_t i, j;
 
-    double* cov_g = calloc(ncol, sizeof(*cov_g));
+    double* cov_g = malloc(ncol * sizeof(*cov_g));
     if (cov_g == NULL)
         return HTNORM_ALLOC_ERROR;
 
@@ -52,6 +52,7 @@ int
 htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
             bool diag, const matrix_t* g, const double* r, double* out)
 {
+    TURNOFF_NAN_CHECK;
     const size_t gncol = g->ncol;  // equal to the dimension of the covariance
     const size_t gnrow = g->nrow;
     const double* gmat = g->mat;
@@ -65,17 +66,17 @@ htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
     if (gnrow == 1)
         return htnorm_rand_g_a_vec(cmat, gncol, diag, gmat, *r, out);
 
-    double* gy = calloc(gnrow, sizeof(*gy));
+    double* gy = malloc(gnrow * sizeof(*gy));
     if (gy == NULL)
         return HTNORM_ALLOC_ERROR;
 
-    double* cov_g = calloc(gnrow * gncol, sizeof(*cov_g));
+    double* cov_g = malloc(gnrow * gncol * sizeof(*cov_g));
     if (cov_g == NULL) {
         info = HTNORM_ALLOC_ERROR;
         goto covg_failure_cleanup;
     }
 
-    double* g_cov_g = calloc(gnrow * gnrow, sizeof(*g_cov_g));
+    double* g_cov_g = malloc(gnrow * gnrow * sizeof(*g_cov_g));
     if (g_cov_g == NULL) {
         info = HTNORM_ALLOC_ERROR;
         goto gcovg_failure_cleanup;
@@ -96,15 +97,11 @@ htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
     // compute: g * cov * g^T
     GEMM(gnrow, gnrow, gncol, 1.0, gmat, gncol, cov_g, gnrow, 0.0, g_cov_g, gnrow);
     // factorize g_cov_g using cholesky method and store in upper triangular part.
-    info = POTRF(gnrow, g_cov_g, gnrow);
-    if (!info) {                      
-        // solve a system of linear equations: g * cov * g^T * alpha = r - g*y
-        // value of alpha is store in `gy` array.
-        info = POTRS(gnrow, 1, g_cov_g, gnrow, gy, 1); 
+    // solve a positive definite system of linear equations: g * cov * g^T * alpha = r - g*y
+    info = POSV(gnrow, 1, g_cov_g, gnrow, gy, 1);
+    if (!info)
         // compute: out = cov * g^T * alpha + out
-        if (!info)  
-            GEMV(gncol, gnrow, 1.0, cov_g, gnrow, gy, 1, 1.0, out, 1);
-    }
+        GEMV(gncol, gnrow, 1.0, cov_g, gnrow, gy, 1, 1.0, out, 1);
 
     free(g_cov_g); 
 gcovg_failure_cleanup:
@@ -120,6 +117,7 @@ int
 htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
              const matrix_t* phi, const matrix_t* omega, bool o_diag, double* out)
 {
+    TURNOFF_NAN_CHECK;
     lapack_int info;
     const size_t pnrow = phi->nrow;
     const size_t pncol = phi->ncol;
@@ -142,7 +140,7 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
         (info = mv_normal_rand_prec(rng, omega->mat, pnrow, o_diag, y2, true)))
         goto y2_failure_cleanup;
 
-    double* x = calloc(pnrow * pncol, sizeof(*x));
+    double* x = malloc(pnrow * pncol * sizeof(*x));
     if (x == NULL) {
         info = HTNORM_ALLOC_ERROR;
         goto y2_failure_cleanup;
@@ -160,13 +158,10 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
         out[i] = y1->v[i] + mean[i];
 
     // solve for alpha: (omega_inv + phi * A_inv * phi^T) * alpha = phi * y1 + y2
-    info = POTRF(pnrow, y2->cov, pnrow);
-    if (!info) {
-        info = POTRS(pnrow, 1, y2->cov, pnrow, y2->v, 1);
-        if (!info)
-            // compute: -A_inv * phi^T * alpha + mean + y1
-            GEMV(pncol, pnrow, -1.0, x, pnrow, y2->v, 1, 1.0, out, 1);
-    } 
+    info = POSV(pnrow, 1, y2->cov, pnrow, y2->v, 1);
+    if (!info)
+        // compute: -A_inv * phi^T * alpha + mean + y1
+        GEMV(pncol, pnrow, -1.0, x, pnrow, y2->v, 1, 1.0, out, 1);
 
     free(x);
 y2_failure_cleanup:

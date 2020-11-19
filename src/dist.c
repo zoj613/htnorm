@@ -36,7 +36,7 @@ std_normal_rand(rng_t* rng)
 
 
 static inline void
-std_normal_rand_fill(rng_t* rng, int n, double* out)
+std_normal_rand_fill(rng_t* rng, size_t n, double* out)
 {
     for (size_t i = n; i--; )
         out[i] = std_normal_rand(rng);
@@ -48,8 +48,8 @@ mvn_output_new(size_t nrow)
 {
     mvn_output_t* out = malloc(sizeof(mvn_output_t));
     if (out != NULL) {
-        out->v = calloc(nrow, sizeof(*out->v));
-        out->cov = calloc(nrow * nrow, sizeof(*out->cov));
+        out->v = malloc(nrow * sizeof(*out->v));
+        out->cov = malloc(nrow * nrow * sizeof(*out->cov));
     }
     return out;
 }
@@ -68,6 +68,8 @@ int
 mv_normal_rand(rng_t* rng, const double* mean, const double* cov, size_t nrow,
                bool diag, double* out)
 {
+    TURNOFF_NAN_CHECK;
+
     lapack_int info = 0;
     size_t i;
 
@@ -77,7 +79,7 @@ mv_normal_rand(rng_t* rng, const double* mean, const double* cov, size_t nrow,
         return info;
     }
 
-    double* factor = calloc(nrow * nrow, sizeof(*factor));
+    double* factor = malloc(nrow * nrow * sizeof(*factor));
     if (factor == NULL)
         return HTNORM_ALLOC_ERROR;
 
@@ -102,6 +104,7 @@ int
 mv_normal_rand_prec(rng_t* rng, const double* prec, size_t nrow, bool diag,
                     mvn_output_t* out, bool full_inv)
 {
+    TURNOFF_NAN_CHECK;
     lapack_int info = 0;
     // if precision is diagonal then use a direct way to calculate output.
     if (diag) {
@@ -114,7 +117,7 @@ mv_normal_rand_prec(rng_t* rng, const double* prec, size_t nrow, bool diag,
         return info;
     }
 
-    double* factor = calloc(nrow * nrow, sizeof(*factor));
+    double* factor = malloc(nrow * nrow * sizeof(*factor));
     if (factor == NULL)
         return HTNORM_ALLOC_ERROR;
 
