@@ -43,6 +43,9 @@
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, (m), (n), (k), \
     (alpha), (a), (lda), (b), (ldb), (beta), (c), (ldc))
 
+#define SYRK(n, k, alpha, a, lda, beta, c, ldc) \
+    cblas_dsyrk(CblasRowMajor, CblasUpper, CblasNoTrans, (n), (k), (alpha), \
+    (a), (lda), (beta), (c), (ldc))
 
 
 /* LAPACKE macros */

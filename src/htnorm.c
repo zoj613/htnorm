@@ -6,7 +6,6 @@
 
 #include "blas.h"
 #include "dist.h"
-#include "../include/htnorm.h"
 
 // special case for when g matrix has dimensions 1 by n (a 1d array)
 static int
@@ -49,24 +48,24 @@ htnorm_rand_g_a_vec(const double* cov, size_t ncol, bool diag, const double* g,
 
 
 int
-htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
-            bool diag, const matrix_t* g, const double* r, double* out)
+htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, const double* mean,
+                             const double* cov, const double* g,
+                             const double* r, double* out)
 {
 #ifdef NONANS
     TURNOFF_NAN_CHECK;
 #endif
-    const size_t gncol = g->ncol;  // equal to the dimension of the covariance
-    const size_t gnrow = g->nrow;
-    const double* gmat = g->mat;
-    const double* cmat = cov->mat;
+    const size_t gncol = conf->gncol;  // equal to the dimension of the covariance
+    const size_t gnrow = conf->gnrow;
+    const bool diag = conf->diag;
 
-    lapack_int info = mv_normal_rand(rng, mean, cmat, gncol, diag, out);
+    lapack_int info = mvn_rand_cov(rng, mean, cov, gncol, diag, out);
     // early return upon failure
     if (info)
         return info;
     // check if g's number of rows is 1 and use an optimized function
     if (gnrow == 1)
-        return htnorm_rand_g_a_vec(cmat, gncol, diag, gmat, *r, out);
+        return htnorm_rand_g_a_vec(cov, gncol, diag, g, *r, out);
 
     double* gy = malloc(gnrow * sizeof(*gy));
     if (gy == NULL)
@@ -86,18 +85,18 @@ htnorm_rand(rng_t* rng, const double* mean, const matrix_t* cov,
 
     // compute: r - g*y
     memcpy(gy, r, gnrow * sizeof(*gy)); 
-    GEMV(gnrow, gncol, -1.0, gmat, gncol, out, 1, 1.0, gy, 1);
+    GEMV(gnrow, gncol, -1.0, g, gncol, out, 1, 1.0, gy, 1);
     // compute: cov * g^T
     if (diag) {
         for (size_t i = 0; i < gncol; i++)
             for (size_t j = 0; j < gnrow; j++)
-                cov_g[gnrow * i + j] = cmat[gncol * i + i] * gmat[gncol * j + i];
+                cov_g[gnrow * i + j] = cov[gncol * i + i] * g[gncol * j + i];
     }
     else {
-        GEMM_NT(gncol, gnrow, gncol, 1.0, cmat, gncol, gmat, gncol, 0.0, cov_g, gnrow); 
+        GEMM_NT(gncol, gnrow, gncol, 1.0, cov, gncol, g, gncol, 0.0, cov_g, gnrow); 
     }
     // compute: g * cov * g^T
-    GEMM(gnrow, gnrow, gncol, 1.0, gmat, gncol, cov_g, gnrow, 0.0, g_cov_g, gnrow);
+    GEMM(gnrow, gnrow, gncol, 1.0, g, gncol, cov_g, gnrow, 0.0, g_cov_g, gnrow);
     // factorize g_cov_g using cholesky method and store in upper triangular part.
     // solve a positive definite system of linear equations: g * cov * g^T * alpha = r - g*y
     info = POSV(gnrow, 1, g_cov_g, gnrow, gy, 1);
@@ -116,17 +115,17 @@ covg_failure_cleanup:
 
 
 int
-htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
-             const matrix_t* phi, const matrix_t* omega, bool o_diag, double* out)
+htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, const double* mean,
+                             const double* a, const double* phi, const double* omega,
+                             double* out)
 {
 #ifdef NONANS
     TURNOFF_NAN_CHECK;
 #endif
     lapack_int info;
-    const size_t pnrow = phi->nrow;
-    const size_t pncol = phi->ncol;
-    const double* pmat = phi->mat;
-    const double* amat = a->mat;
+    const size_t pnrow = conf->pnrow;
+    const size_t pncol = conf->pncol;
+    const int a_type = conf->a_id;
 
     mvn_output_t* y1 = mvn_output_new(pncol);
     if (y1 == NULL || y1->v == NULL || y1->cov == NULL) {
@@ -140,8 +139,8 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
         goto y2_failure_cleanup;
     }
 
-    if((info = mv_normal_rand_prec(rng, amat, pncol, a_diag, y1, false)) ||
-        (info = mv_normal_rand_prec(rng, omega->mat, pnrow, o_diag, y2, true)))
+    if((info = mvn_rand_prec(rng, a, pncol, a_type , y1, false)) ||
+        (info = mvn_rand_prec(rng, omega, pnrow, conf->o_id, y2, true)))
         goto y2_failure_cleanup;
 
     double* x = malloc(pnrow * pncol * sizeof(*x));
@@ -151,21 +150,49 @@ htnorm_rand2(rng_t* rng, const double* mean, const matrix_t* a, bool a_diag,
     }
 
     // compute: x = A_inv * phi^T
-    GEMM_NT(pncol, pnrow, pncol, 1.0, amat, pncol, pmat, pncol, 0.0, x, pnrow);
+    if (a_type == DIAGONAL) {
+        for (size_t i = 0; i < pncol; i++)
+            for (size_t j = 0; j < pnrow; j++)
+                x[pnrow * i + j] = y1->cov[pncol * i + i] * phi[pncol * j + i];
+    }
+    else if (a_type == NORMAL) {
+        GEMM_NT(pncol, pnrow, pncol, 1.0, y1->cov, pncol, phi, pncol, 0.0, x, pnrow);
+    }
     // compute: phi * A_inv * phi^T + omega_inv
-    GEMM(pnrow, pnrow, pncol, 1.0, pmat, pncol, x, pnrow, 1.0, y2->cov, pnrow);
+    if (a_type == IDENTITY) {
+        SYRK(pnrow, pncol, 1.0, phi, pncol, 1.0, y2->cov, pnrow);
+    }
+    else {
+        GEMM(pnrow, pnrow, pncol, 1.0, phi, pncol, x, pnrow, 1.0, y2->cov, pnrow);
+    }
     // compute: phi * y1 + y2
-    GEMV(pnrow, pncol, 1.0, pmat, pncol, y1->v, 1, 1.0, y2->v, 1);
+    GEMV(pnrow, pncol, 1.0, phi, pncol, y1->v, 1, 1.0, y2->v, 1);
 
-    // compute: mean + y1
-    for (size_t i = pncol; i--; )
-        out[i] = y1->v[i] + mean[i];
-
-    // solve for alpha: (omega_inv + phi * A_inv * phi^T) * alpha = phi * y1 + y2
+    double coef = 1.0;
+    if (conf->struct_mean) {
+        // compute: t - (phi * y1 + y2)
+        for (size_t i = pncol; i--; ) {
+            if (i < pnrow)
+                y2->v[i] = mean[i] - y2->v[i]; 
+            out[i] = y1->v[i];
+        }
+        coef = -1.0;
+    }
+    else {
+        // compute: mean + y1
+        for (size_t i = pncol; i--; )
+            out[i] = y1->v[i] + mean[i];
+    }
+    // solve for alpha: (omega_inv + phi * A_inv * phi^T) * alpha = b 
+    // where b = t - (phi * y1 + y2) or b = phi * y1 + y2
     info = POSV(pnrow, 1, y2->cov, pnrow, y2->v, 1);
-    if (!info)
-        // compute: -A_inv * phi^T * alpha + mean + y1
-        GEMV(pncol, pnrow, -1.0, x, pnrow, y2->v, 1, 1.0, out, 1);
+    // compute: (coef) * (A_inv * phi^T * alpha) + c, where c = y1 or (mean + y1) 
+    if (!info && (a_type == IDENTITY)) {
+        GEMV_T(pnrow, pncol, coef, phi, pncol, y2->v, 1, 1.0, out, 1);
+    }
+    else if (!info) {
+        GEMV(pncol, pnrow, coef, x, pnrow, y2->v, 1, 1.0, out, 1);
+    }
 
     free(x);
 y2_failure_cleanup:

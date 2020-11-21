@@ -25,7 +25,7 @@ std_normal_rand(rng_t* rng)
         u = 2.0 * rng->next_double(rng->base) - 1;
         v = 2.0 * rng->next_double(rng->base) - 1;
         s = u * u + v * v;
-    } while (s >= 1.0);
+    } while (!(s < 1.0));
 
     z = sqrt(-2 * log(s) / s);
     y = v * z;
@@ -65,8 +65,8 @@ mvn_output_free(mvn_output_t* a)
 
 
 int
-mv_normal_rand(rng_t* rng, const double* mean, const double* cov, size_t nrow,
-               bool diag, double* out)
+mvn_rand_cov(rng_t* rng, const double* mean, const double* cov, size_t nrow,
+             bool diag, double* out)
 {
 #ifdef NONANS
     TURNOFF_NAN_CHECK;
@@ -102,15 +102,19 @@ mv_normal_rand(rng_t* rng, const double* mean, const double* cov, size_t nrow,
 
 
 int
-mv_normal_rand_prec(rng_t* rng, const double* prec, size_t nrow, bool diag,
-                    mvn_output_t* out, bool full_inv)
+mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t type,
+              mvn_output_t* out, bool full_inv)
 {
 #ifdef NONANS
     TURNOFF_NAN_CHECK;
 #endif
     lapack_int info = 0;
     // if precision is diagonal then use a direct way to calculate output.
-    if (diag) {
+    if (type == IDENTITY) {
+        std_normal_rand_fill(rng, nrow, out->v);
+        return info;
+    }
+    else if (type == DIAGONAL) {
         size_t diag_index;
         for (size_t i = nrow; i--; ) {
             diag_index = nrow * i + i;
