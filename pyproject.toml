@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "pyhtnorm"
+version = "0.1.0"
+description = "Fast Simulation of Hyperplane-Truncated Multivatiate Normal Distributions" 
+authors = ["Zolisa Bleki"]
+license = "BSD-3-Clause"
+readme = 'README.md'
+repository = "https://github.com/zoj613/htnorm/"
+keywords = [
+    'statistical sampling',
+    'multivariate gaussian distribution',
+    'sampling distribution',
+    'posterior sampling'
+]
+include = [
+    {path = "include", format = "sdist"},
+    {path = "src/*.c", format = "sdist"},
+    {path = "src/*.h", format = "sdist"},
+]
+
+[tool.poetry.build]
+script = "build.py"
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+
+[tool.poetry.dev-dependencies]
+Cython = "^0.29.20"
+numpy = "*"
+pytest = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0a9", "wheel", "setuptools"]
+build-backend = "poetry.core.masonry.api"
