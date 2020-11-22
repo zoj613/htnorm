@@ -52,9 +52,6 @@ htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, const double* 
                              const double* cov, const double* g,
                              const double* r, double* out)
 {
-#ifdef NONANS
-    TURNOFF_NAN_CHECK;
-#endif
     const size_t gncol = conf->gncol;  // equal to the dimension of the covariance
     const size_t gnrow = conf->gnrow;
     const bool diag = conf->diag;
@@ -119,9 +116,6 @@ htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, const double* 
                              const double* a, const double* phi, const double* omega,
                              double* out)
 {
-#ifdef NONANS
-    TURNOFF_NAN_CHECK;
-#endif
     lapack_int info;
     const size_t pnrow = conf->pnrow;
     const size_t pncol = conf->pncol;
@@ -160,7 +154,7 @@ htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, const double* 
     }
     // compute: phi * A_inv * phi^T + omega_inv
     if (a_type == IDENTITY) {
-        SYRK(pnrow, pncol, 1.0, phi, pncol, 1.0, y2->cov, pnrow);
+        GEMM_NT(pnrow, pnrow, pncol, 1.0, phi, pncol, phi, pncol, 1.0, y2->cov, pnrow);
     }
     else {
         GEMM(pnrow, pnrow, pncol, 1.0, phi, pncol, x, pnrow, 1.0, y2->cov, pnrow);

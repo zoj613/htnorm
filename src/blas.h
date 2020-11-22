@@ -5,10 +5,10 @@
 #define HTNORM_BLAS_H
 
 #include <cblas.h>
+// disable nan-checking in all lapacke routines
+#define LAPACK_DISABLE_NAN_CHECK
 #include <lapacke.h>
 
-
-#define TURNOFF_NAN_CHECK LAPACKE_set_nancheck(0)
 
 /* CBLAS macros */
 #define TRMV(n, a, lda, x, incx) \

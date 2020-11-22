@@ -49,7 +49,7 @@ mvn_output_new(size_t nrow)
     mvn_output_t* out = malloc(sizeof(mvn_output_t));
     if (out != NULL) {
         out->v = malloc(nrow * sizeof(*out->v));
-        out->cov = malloc(nrow * nrow * sizeof(*out->cov));
+        out->cov = calloc(nrow * nrow, sizeof(*out->cov));
     }
     return out;
 }
@@ -68,9 +68,6 @@ int
 mvn_rand_cov(rng_t* rng, const double* mean, const double* cov, size_t nrow,
              bool diag, double* out)
 {
-#ifdef NONANS
-    TURNOFF_NAN_CHECK;
-#endif
     lapack_int info = 0;
     size_t i;
 
@@ -105,9 +102,6 @@ int
 mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t type,
               mvn_output_t* out, bool full_inv)
 {
-#ifdef NONANS
-    TURNOFF_NAN_CHECK;
-#endif
     lapack_int info = 0;
     // if precision is diagonal then use a direct way to calculate output.
     if (type == IDENTITY) {
@@ -119,7 +113,7 @@ mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t type,
         for (size_t i = nrow; i--; ) {
             diag_index = nrow * i + i;
             out->cov[diag_index] = 1.0 / prec[diag_index];
-            out->v[i] = std_normal_rand(rng) / sqrt(out->cov[diag_index]);
+            out->v[i] = std_normal_rand(rng) * sqrt(out->cov[diag_index]);
         }
         return info;
     }
@@ -135,7 +129,7 @@ mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t type,
         std_normal_rand_fill(rng, nrow, out->v);
         TRMV_T(nrow, factor, nrow, out->v, 1);
         // solve system using cholesky factor to get: out ~ N(0, prec_inv)
-        info = POTRS(nrow, 1, factor, nrow, out->v, nrow);
+        info = POTRS(nrow, 1, factor, nrow, out->v, 1);
         if (!info) {
             // calculate the explicit inverse needed with the output
             info = POTRI(nrow, factor, nrow);
