@@ -33,31 +33,27 @@ cdef extern from "../include/htnorm.h":
     ctypedef struct ht_config_t:
         size_t gnrow
         size_t gncol
+        const double* mean
+        const double* cov
+        const double* g
+        const double* r
         bint is_diag "diag"
 
     ctypedef struct sp_config_t:
-        bint struct_mean
         mat_type a_id
         mat_type o_id
         size_t pnrow
         size_t pncol
+        const double* mean
+        const double* a
+        const double* phi
+        const double* omega
+        bint struct_mean
 
     int hplane_mvn "htn_hyperplane_truncated_mvn" (
-        rng_t* rng,
-        const ht_config_t* conf,
-        const double* mean,
-        const double* cov,
-        const double* g,
-        const double* r,
-        double* out
+        rng_t* rng, const ht_config_t* conf, double* out
     ) nogil
 
     int str_prec_mvn "htn_structured_precision_mvn"(
-        rng_t* rng,
-        const sp_config_t* conf,
-        const double* mean,
-        const double* a,
-        const double* phi,
-        const double* omega,
-        double* out
+        rng_t* rng, const sp_config_t* conf, double* out
     ) nogil

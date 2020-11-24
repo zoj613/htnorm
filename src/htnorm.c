@@ -9,9 +9,14 @@
 
 // special case for when g matrix has dimensions 1 by n (a 1d array)
 static int
-htnorm_rand_g_a_vec(const double* cov, size_t ncol, bool diag, const double* g,
-                    double r, double* out)
+hyperplane_truncated_norm_1d_g(const ht_config_t* conf, double* out)
 {
+    bool diag = conf->diag;
+    size_t ncol = conf->gncol;
+    double r = *(conf->r);
+    const double* cov = conf->mean;
+    const double* g = conf->g;
+
     double alpha = 0, g_cov_g = 0;
     size_t i, j;
 
@@ -48,21 +53,24 @@ htnorm_rand_g_a_vec(const double* cov, size_t ncol, bool diag, const double* g,
 
 
 int
-htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, const double* mean,
-                             const double* cov, const double* g,
-                             const double* r, double* out)
+htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out)
 {
+    // check if g's number of rows is 1 and use an optimized function
+    if (conf->gnrow == 1)
+        return hyperplane_truncated_norm_1d_g(conf, out);
+
     const size_t gncol = conf->gncol;  // equal to the dimension of the covariance
     const size_t gnrow = conf->gnrow;
     const bool diag = conf->diag;
+    const double* mean = conf->mean;
+    const double* cov = conf->cov;
+    const double* g = conf->g;
+    const double* r = conf->r;
 
     lapack_int info = mvn_rand_cov(rng, mean, cov, gncol, diag, out);
     // early return upon failure
     if (info)
         return info;
-    // check if g's number of rows is 1 and use an optimized function
-    if (gnrow == 1)
-        return htnorm_rand_g_a_vec(cov, gncol, diag, g, *r, out);
 
     double* gy = malloc(gnrow * sizeof(*gy));
     if (gy == NULL)
@@ -112,14 +120,16 @@ covg_failure_cleanup:
 
 
 int
-htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, const double* mean,
-                             const double* a, const double* phi, const double* omega,
-                             double* out)
+htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* out)
 {
     lapack_int info;
     const size_t pnrow = conf->pnrow;
     const size_t pncol = conf->pncol;
-    const int a_type = conf->a_id;
+    const type_t a_type = conf->a_id;
+    const double* mean = conf->mean;
+    const double* a = conf->a;
+    const double* phi = conf->phi;
+    const double* omega = conf->omega;
 
     mvn_output_t* y1 = mvn_output_new(pncol);
     if (y1 == NULL || y1->v == NULL || y1->cov == NULL) {
