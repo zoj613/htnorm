@@ -12,8 +12,8 @@ CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pedantic -g -pthread \
 	-Wno-missing-braces
 
 # set default include directory for BLAS include files
-INCLUDE_DIRS ?= /usr/include
-override INCLUDE_DIRS := -I../include -I$(INCLUDE_DIRS)
+INCLUDE_DIR ?= /usr/include
+override INCLUDE_DIRS := -I../include -I$(INCLUDE_DIR)
 LDIR := ../lib
 # set default include directory for BLAS shared library
 LIBS_DIR ?= /usr/lib
@@ -29,7 +29,7 @@ OBJ= $(patsubst %.c, $(ODIR)/%.o, $(SRCFILES))
 
 $(ODIR)/%.o: %.c
 	mkdir -p $(ODIR) 
-	$(CC) $(CFLAGS) $(INCLUDE_DIRS) -o $@ -c $^
+	$(CC) $(CFLAGS) $(INCLUDE_DIR) -o $@ -c $^
 
 lib: $(LDIR)/lib$(NAME).so
 	ldconfig -v -n $(LDIR)

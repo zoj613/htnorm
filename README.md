@@ -95,8 +95,23 @@ int main ()
 
 ## Python API
 
-A high level python interface to the library is also provided. Installing it from 
-source requires an installation of [poetry][7] and the following shell commands:
+A high level python interface to the library is also provided. Linux users can 
+install it using wheels via pip (thus not needing to worry about availability of C libraries),
+```bash
+pip install pyhtnorm
+```
+Wheels are not provided for MacOS. To install via pip, one can run the following commands:
+```bash
+#set the path to BLAS installation headers
+export INCLUDE_DIR=<path/to/headers>
+#set the path to BLAS shared library
+export LIBS_DIR=<some directory>
+#set the name of the BLAS shared library (e.g. "openblas")
+export LIBS=<lib name>
+# finally install via pip so the compilation and linking can be done correctly
+pip install pyhtnorm
+```
+Alternatively, one can install it from source. This requires an installation of [poetry][7] and the following shell commands:
 
 ```bash
 $ git clone https://github.com/zoj613/htnorm.git
@@ -105,6 +120,7 @@ $ poetry install
 # add htnorm to python's path
 $ export PYTHONPATH=$PWD:$PYTHONPATH
 ```
+
 Below is an example of how to use htnorm in python to sample from a multivariate
 gaussian truncated on the hyperplane ![sumzero](https://latex.codecogs.com/svg.latex?%5Cmathbf%7B1%7D%5ET%5Cmathbf%7Bx%7D%20%3D%200) (i.e. making sure the sampled values sum to zero)
 
@@ -119,9 +135,9 @@ k1 = 1000
 k2 = 1
 npy_rng = np.random.default_rng()
 temp = npy_rng.random((k1, k1))
-cov = a @ a.T + np.diag(npy_rng.random(k1))
+cov = temp @ temp.T + np.diag(npy_rng.random(k1))
 G = np.ones((k2, k1))
-r = np.zeros(k1)
+r = np.zeros(k2)
 mean = npy_rng.random(k1)
 
 samples = rng.hyperplane_truncated_mvnorm(mean, cov, G, r)
