@@ -1,6 +1,13 @@
 /* Copyright (c) 2020, Zolisa Bleki
  *
- * SPDX-License-Identifier: BSD-3-Clause */
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ *
+ * This module contains macros that are meant to make calls to thw BLAS and
+ * LAPACK C API's easier. Notice that NaN-checking is turned off for LAPACK
+ * routines for performance reasons. The checks can be turned on again using
+ * compiler flags to undefine the `LAPACK_DISABLE_NAN_CHECK`.
+ */
 #ifndef HTNORM_BLAS_H
 #define HTNORM_BLAS_H
 

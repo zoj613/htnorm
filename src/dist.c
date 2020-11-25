@@ -9,6 +9,10 @@
 #include "dist.h"
 
 
+/* Generate a sample from the standard normal distribution using the 
+ * Marsaglia-Polar method.
+ *
+ * TODO: Think about using a faster one, maybe the Ziggurat method?*/
 static double
 std_normal_rand(rng_t* rng)
 {
