@@ -80,14 +80,16 @@ cdef class HTNGenerator:
         config.gnrow = g.shape[0]
         config.gncol = g.shape[1]
         config.is_diag = diag
+        config.mean = &mean[0]
+        config.cov = &cov[0, 0]
+        config.g = &g[0, 0]
+        config.r = &r[0]
 
         if out is None:
             out = array.clone(self.pyarr, mean.shape[0], zero=False)
 
         with nogil:
-            info = hplane_mvn(
-                self.rng, &config, &mean[0], &cov[0, 0], &g[0, 0], &r[0], &out[0]
-            )
+            info = hplane_mvn(self.rng, &config, &out[0])
 
         validate_return_info(info)
         # return the base object of the memoryview
@@ -105,7 +107,8 @@ cdef class HTNGenerator:
         double[:] out=None
     ):
         """
-        structured_precision_mvnorm(mean, a, phi, omega, mean_structured=False, a_type=0, o_type=0, out=None)
+        structured_precision_mvnorm(mean, a, phi, omega, mean_structured=False,
+                                    a_type=0, o_type=0, out=None)
         """
         cdef sp_config_t config
 
@@ -120,14 +123,16 @@ cdef class HTNGenerator:
         config.o_id = <mat_type>o_type
         config.pnrow = phi.shape[0]
         config.pncol = phi.shape[1]
+        config.mean = &mean[0]
+        config.a = &a[0, 0]
+        config.phi = &phi[0, 0]
+        config.omega = &omega[0, 0]
 
         if out is None:
             out = array.clone(self.pyarr, mean.shape[0], zero=False)
 
         with nogil:
-            info = str_prec_mvn(
-                self.rng, &config, &mean[0], &a[0, 0], &phi[0, 0], &omega[0, 0], &out[0]
-            )
+            info = str_prec_mvn(self.rng, &config, &out[0])
 
         validate_return_info(info)
         return out.base
