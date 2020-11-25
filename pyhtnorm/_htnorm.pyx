@@ -48,9 +48,9 @@ cdef class HTNGenerator:
 
     def __cinit__(self, seed=None, gen=None):
         if seed and not (isinstance(seed, int) and seed >= 0):
-            raise TypeError('`seed` needs to be an int and non-negative.')
+            raise ValueError('`seed` needs to be an int and non-negative.')
         if gen not in {None, 'pcg', 'xrs'}:
-            raise TypeError(f'bitgenerator {gen} is not supported.')
+            raise ValueError(f'bitgenerator {gen} is not supported.')
 
         self.rng = get_pcg_instance(seed) if gen == 'pcg' else get_xrs_instance(seed)
         if self.rng is NULL:
@@ -74,6 +74,11 @@ cdef class HTNGenerator:
         """
         hyperplane_truncated_mvnorm(mean, cov, g, r, diag=False, out=False)
         """
+        if g.shape[1] != cov.shape[0]:
+            raise RuntimeError(
+                '`G` number of cols need to be equal to `cov` number of rows'
+            )
+
         cdef ht_config_t config
         cdef int info;
 
@@ -110,13 +115,21 @@ cdef class HTNGenerator:
         structured_precision_mvnorm(mean, a, phi, omega, mean_structured=False,
                                     a_type=0, o_type=0, out=None)
         """
-        cdef sp_config_t config
+        if (omega.shape[0] != omega.shape[1]) or (a.shape[0] != a.shape[1]):
+            raise ValueError('`omega` and `a` both need to be square matrices')
+
+        if (phi.shape[1] != omega.shape[0]) or (phi.shape[0] != a.shape[1]):
+            raise ValueError(
+                "Shapes of `phi`, `omega` and `a` are not consistent"
+            )
 
         if not {a_type, o_type}.issubset(_VALID_MATRIX_TYPES):
             raise ValueError(
                 "`a_type` and `o_type` must be one of "
                 f"({NORMAL}, {DIAGONAL}, {IDENTITY})"
             )
+
+        cdef sp_config_t config
 
         config.struct_mean = mean_structured
         config.a_id = <mat_type>a_type
