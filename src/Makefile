@@ -3,16 +3,20 @@
 NAME := htnorm
 CC := gcc
 
-CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pedantic -g -DNDEBUG \
-	-ffast-math -Wall -Wextra -Werror -Wsign-compare -Wunused \
+CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pedantic -g -pthread \
+	-DNDEBUG -ffast-math -Wall -Wextra -Werror -Wsign-compare -Wunused \
 	-Wno-unused-result -Wpointer-arith -Wcast-qual -Wmissing-prototypes \
 	-Wno-missing-braces
 
-INCLUDE_DIRS := -I. -I../include -I/usr/include
-
+# set default include directory for BLAS include files
+INCLUDE_DIRS ?= /usr/include
+override INCLUDE_DIRS := -I../include -I$(INCLUDE_DIRS)
 LDIR := ../lib
-LIBS_DIRS := -L/usr/lib
-LIBS := -lm -lcblas -llapacke
+# set default include directory for BLAS shared library
+LIBS_DIR ?= /usr/lib
+override LIBS_DIR := -L$(LIBS_DIR)
+LIBS ?= -lopenblas
+override LIBS += -lm
 
 SRCFILES = $(wildcard *.c)
 
@@ -30,7 +34,7 @@ lib: $(LDIR)/lib$(NAME).so
 
 $(LDIR)/lib$(NAME).so: $(OBJ)
 	mkdir -p $(LDIR)
-	$(CC) -shared -Wl,-soname=lib$(NAME) -o $@ $(LIBS) $^
+	$(CC) -shared -Wl,-soname=lib$(NAME) -o $@ $(LIBS_DIR) $(LIBS) $^
 
 clean:
 	rm -f $(ODIR)/*.o  $(LDIR)/*
