@@ -1,3 +1,6 @@
+# copyright (c) 2020, zolisa bleki
+#
+# SPDX-License-Identifier: BSD-3-Clause 
 .PHONY: clean lib
 
 NAME := htnorm

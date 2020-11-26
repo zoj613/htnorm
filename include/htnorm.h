@@ -1,6 +1,27 @@
 /* Copyright (c) 2020, Zolisa Bleki
  *
- * SPDX-License-Identifier: BSD-3-Clause */
+ * SPDX-License-Identifier: BSD-3-Clause 
+ *
+ * Fast Simulation of Hyperplane-Truncated Multivaariate Normal Distributions.
+ *
+ * This library implements the algorithms 2, 4 and the one in example 4 of
+ * Cong, Y., Chen, B., & Zhou, M. (2017).
+ *
+ * Algorithm 2 allows fast and exact sampling from a multivariate normal (MVN)
+ * distribution that is trancated on a hyperplane.
+ *
+ * Algorthm 4 allows efficient sampling from a MVN with a structured precision
+ * matrix.
+ *
+ * Algorithm described in example 4 allows efficient sampling from a MVN with
+ * a structured precision matrix and a structured mean dependent on the
+ * structure of the precision matrix.
+ *
+ * References:
+ * 1) Cong, Y., Chen, B., & Zhou, M. (2017). Fast simulation of
+ *    hyperplane-truncated multivariate normal distributions. Bayesian Analysis,
+ *    12(4), 1017-1037.
+ */
 #ifndef HTNORM_HTNORM_H
 #define HTNORM_HTNORM_H
 
@@ -11,6 +32,7 @@
 
 #define INIT_HT_CONFIG(x) (x) = {.diag = false}
 
+// initialize a pointer to a `ht_config_t` struct.
 #define INIT_SP_CONFIG(x) \
     (x) = {.struct_mean = false, .a_id = NORMAL, .o_id = NORMAL} 
 
@@ -54,8 +76,53 @@ typedef struct {
     bool struct_mean; 
 } sp_config_t;
 
-
+/* Sample from a multivariate normal distribution truncated on a hyperplane.
+ *
+ * Generate sample x from the distribution: N(mean, cov) truncated on the plane
+ * {x | Gx = r}, where the rank of G is less than that of the covariance.
+ *
+ * Paramaters
+ * ----------
+ *  rng:
+ *      A pointer to the `rng_t` struct (The random number generator).
+ *  conf:
+ *      A pointer to the input configuration struct `ht_config_t`.
+ *  out:
+ *      An array to store the generated samples.
+ *
+ *  Returns
+ *  -------
+ *  Zero if the sampling was successful. A positive integer is returned if the
+ *  sampled failed because the covariance is not positive definite or if a
+ *  factorization of the covariance was not successful. A negative integer is
+ *  returned if one of the inputs contains an illegal value (non-numerical/NaN).
+ */
 int htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out);
+
+
+/* Sample from a MVN with a structured precision matrix and/or structured mean.
+ *
+ * Sample from a MVN: N(mean, (A + phi^T * Omega * phi)^-1) or
+ * N((A + phi^T * Omega * phi)^-1 * phi^T * t, (A + phi^T * Omega * phi)^-1))
+ * This algorithm in very efficient and ideal when the dimension of matrix A
+ * is greater than that of matrix Omega.
+ *
+ * Parameters
+ * ----------
+ *  rng:
+ *      A pointer to the `rng_t` struct (The random number generator).
+ *  conf:
+ *      A pointer to the input configuration struct `sp_config_t`.
+ *  out:
+ *      An array to store the generated samples.
+ *
+ *  Returns
+ *  -------
+ *  Zero if the sampling was successful. A positive integer is returned if the
+ *  sampled failed because the covariance is not positive definite or if a
+ *  factorization of the covariance was not successful. A negative integer is
+ *  returned if one of the inputs contains an illegal value (non-numerical/NaN).
+ * */
 int htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* out);
 
 #endif

@@ -45,7 +45,55 @@ cdef object _VALID_MATRIX_TYPES = {NORMAL, DIAGONAL, IDENTITY}
 
 
 cdef class HTNGenerator:
+    """
+    Sample from a multivariate normal truncated on a hyperplane
 
+    Parameters
+    ----------
+    seed : int, optional, default=None
+        A random seed for the underlying bitgenerator.If not set, then the
+        eenerator will be randomly seeded.
+    gen : str, optional, default=None
+        The name of the generator to use for random number generation. The
+        value needs to be one of {'pcg', 'xrs'}, where 'pcg' is PCG64 and 'xrs'
+        is the Xoroshiro128plus bit generator.
+
+    Methods
+    -------
+    hyperplane_truncated_mvnorm(mean, cov, g, r, diag=False, out=False)
+    structured_precision_mvnorm(mean, a, phi, omega, mean_structured=False,
+                                a_type=0, o_type=0, out=None)
+
+    Notes
+    -----
+    This class implements algorithms 2, 4 and the one in example 4 of [1]_
+    Where one can generate efficiently samples from a MVN truncated on a
+    hyperplace
+
+    .. math::
+        \mathbf{G}\mathbf{x} = \mathbf{r},
+
+    where :math:`rank(\mathbf{G}) = k_2 < rank(\mathbf{\Sigma})`.
+
+    This class also implements an efficient way that leverages high dimensional
+    truncated MVN to sample from a MVN with a structured precision matrix, as
+    described in algorithm 4 of [1]_, where the precision
+    :math:`\mathbf{\Lambda}` can be written as
+
+    .. math::
+        \mathbf{\Lambda} = (\mathbf{A} + \mathbf{Phi}^T\mathbf{\Omega}\mathbf{Phi}),
+        \mathbf{\Phi} \in \R^{n \times p}, \mathbf{\Omega} \in \R^{n \times n}
+        and \mathbf{A} \in \R^{p \times p}.
+
+    Algorithm 4 can be extended to sample from a MVN whose mean depends on the
+    structure of the precision, as shown in example 4 of [1]_ .
+
+    References
+    ----------
+    .. [1] Cong, Yulai; Chen, Bo; Zhou, Mingyuan. Fast Simulation of Hyperplane-
+       Truncated Multivariate Normal Distributions. Bayesian Anal. 12 (2017),
+       no. 4, 1017--1037. doi:10.1214/17-BA1052. https://projecteuclid.org/euclid.ba/1488337478
+    """
     def __cinit__(self, seed=None, gen=None):
         if seed and not (isinstance(seed, int) and seed >= 0):
             raise ValueError('`seed` needs to be an int and non-negative.')
@@ -73,6 +121,48 @@ cdef class HTNGenerator:
     ):
         """
         hyperplane_truncated_mvnorm(mean, cov, g, r, diag=False, out=False)
+
+        Sample from a multivariate normal truncated on a hyperplane
+
+        .. math::
+            \mathbf{G}\mathbf{x} = \mathbf{r},
+
+        where :math:`rank(\mathbf{G}) = k_2 < rank(\mathbf{\Sigma})`.
+
+        Parameters
+        ----------
+        mean : 1d array
+            The mean of the distribution.
+        cov : 2d array
+            The covariance of the distribution.
+        g : 2d array
+            The ``G`` matrix representing the left-hand-side of the plane.
+        r : 1d array
+            The right-hand side of the hyperplane.
+        diag : bool, optional, default=False
+            Setting this option to True if ``cov`` is a diagonal matrix can
+            speed up sampling.
+        out : 1d array, optional, default=None
+            An array of the same shape as `mean` to store the samples. If not
+            set the a new python array object is created and the samples are
+            copied into before the method returns.
+
+        Returns
+        -------
+        out : {array.array, array_like}
+            A sample from this distribution. If `out` is given then the return
+            value will be `out`, else a new python array object is returned.
+
+        Raises
+        ------
+        RuntimeError
+            When the dimensions of the input arrays do not match.
+        MemoryError
+            If the program runs out of memory while sampling.
+        ValueError
+            If the sampling was not successful because of faulty input or if
+            the algorithm could not successfully generate the samples.
+
         """
         if g.shape[1] != cov.shape[0]:
             raise RuntimeError(
@@ -80,7 +170,7 @@ cdef class HTNGenerator:
             )
 
         cdef ht_config_t config
-        cdef int info;
+        cdef int info
 
         config.gnrow = g.shape[0]
         config.gncol = g.shape[1]
@@ -114,6 +204,51 @@ cdef class HTNGenerator:
         """
         structured_precision_mvnorm(mean, a, phi, omega, mean_structured=False,
                                     a_type=0, o_type=0, out=None)
+
+        Sample from a MVN with a structured precision matrix :math:`\Lambda`
+        .. math::
+             \mathbf{\Lambda} = (\mathbf{A} + \mathbf{Phi}^T\mathbf{\Omega}\mathbf{Phi})
+
+        Parameters
+        ----------
+        mean : 1d array
+            The mean of the distribution.
+        a : 2d array
+            matrix ``A`` in the precision matrix structure.
+        phi : 2d array
+            matrix ``Phi`` in the precision matrix structure.
+        omega : 2d array
+            matrix ``omega`` in the precision matrix structure.
+        mean_structured : bool, optional, default=False
+            whether the mean is also structured and depends on the precision
+            such than ``mean = (precision)^-1 * phi^T * omega * t``. If this
+            is set to True, then the `mean` parameter is assumed to contain the
+            array ``t``.
+        a_type : {0, 1, 2}, optional, default=0
+            Whether `a` ia a normal, diagonal or identity matrix.
+        o_type : {0, 1, 2}, optional, default=0
+            Whether `omega` ia a normal, diagonal or identity matrix.
+        out : 1d array, optional, default=None
+            An array of the same shape as `mean` to store the samples. If not
+            set the a new python array object is created and the samples are
+            copied into before the method returns.
+
+        Returns
+        -------
+        out : {array.array, array_like}
+            A sample from this distribution. If `out` is given then the return
+            value will be `out`, else a new python array object is returned.
+
+        Raises
+        ------
+        RuntimeError
+            When the dimensions of the input arrays do not match.
+        MemoryError
+            If the program runs out of memory while sampling.
+        ValueError
+            If the sampling was not successful because of faulty input or if
+            the algorithm could not successfully generate the samples.
+
         """
         if (omega.shape[0] != omega.shape[1]) or (a.shape[0] != a.shape[1]):
             raise ValueError('`omega` and `a` both need to be square matrices')
@@ -130,6 +265,7 @@ cdef class HTNGenerator:
             )
 
         cdef sp_config_t config
+        cdef int info
 
         config.struct_mean = mean_structured
         config.a_id = <mat_type>a_type
