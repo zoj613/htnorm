@@ -66,6 +66,11 @@ def test_hypertruncated_mvn(hypertruncated_mvn_data):
     # test results of passing output array through the `out` parameter
     g.hyperplane_truncated_mvnorm(mean, cov, G, r, out=arr1)
     assert not np.allclose(arr1, arr2)
+    # test results of samples truncated on the hyperplane sum(x) = 0
+    G = np.ones((1, G.shape[1]))
+    r = np.zeros(1)
+    g.hyperplane_truncated_mvnorm(mean, cov, G, r, out=arr1)
+    assert np.allclose(sum(arr1), 0)
 
 
 def test_structured_mvn(structured_mvn_data):

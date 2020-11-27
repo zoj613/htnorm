@@ -55,10 +55,6 @@ hyperplane_truncated_norm_1d_g(const ht_config_t* conf, double* out)
 int
 htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out)
 {
-    // check if g's number of rows is 1 and use an optimized function
-    if (conf->gnrow == 1)
-        return hyperplane_truncated_norm_1d_g(conf, out);
-
     const size_t gncol = conf->gncol;  // equal to the dimension of the covariance
     const size_t gnrow = conf->gnrow;
     const bool diag = conf->diag;
@@ -71,6 +67,10 @@ htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out)
     // early return upon failure
     if (info)
         return info;
+
+    // check if g's number of rows is 1 and use an optimized function
+    if (gnrow == 1)
+        return hyperplane_truncated_norm_1d_g(conf, out);
 
     double* gy = malloc(gnrow * sizeof(*gy));
     if (gy == NULL)
