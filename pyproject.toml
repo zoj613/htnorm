@@ -9,13 +9,20 @@ repository = "https://github.com/zoj613/htnorm/"
 keywords = [
     'statistical sampling',
     'multivariate gaussian distribution',
+    'hyperplane truncated multivariate normal',
+    'structured precision multivariate normal',
     'sampling distribution',
     'posterior sampling'
 ]
+packages = [{include = "pyhtnorm/*.py"}]
 include = [
+    {path = "pyhtnorm/*.c", format = "sdist"},
     {path = "include", format = "sdist"},
     {path = "src/*.c", format = "sdist"},
     {path = "src/*.h", format = "sdist"},
+    {path = "src/*.txt", format = "sdist"},
+
+    {path = "pyhtnorm/*.pxd"}
 ]
 
 [tool.poetry.build]
@@ -28,6 +35,7 @@ python = "^3.6.1"
 Cython = "^0.29.20"
 numpy = "*"
 pytest = "*"
+toml = "^0.10.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0a9", "wheel", "setuptools"]

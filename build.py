@@ -1,4 +1,5 @@
 from distutils.core import Extension
+import os
 
 
 source_files = [
@@ -12,14 +13,38 @@ source_files = [
     "src/htnorm.c"
 ]
 
+# get environmental variables to determine the flow of the build process
+BUILD_WHEELS = os.getenv("BUILD_WHEELS", None)
+INCLUDE_DIR = os.getenv("INCLUDE_DIR", None)
+LIBS_DIR = os.getenv("LIBS_DIR", '/usr/lib')
+LIBS = os.getenv("LIBS", 'openblas')
+
+# necessary directories
+include_dirs = ['/usr/include', '.include']
+libraries = ['m']
+
+# when building manylinux2014 wheels for pypi use different directories as
+# required by CentOS, else allow the user to specify them when building from
+# source distribution
+if BUILD_WHEELS:
+    include_dirs.append('/usr/include/openblas/')
+    library_dirs = ['/lib64/', '/usr/lib64']
+    libraries.append('openblasp')
+else:
+    if INCLUDE_DIR:
+        include_dirs.append(INCLUDE_DIR)
+    library_dirs = [LIBS_DIR]
+    libraries.append(LIBS)
+
 
 extensions = [
     Extension(
         "pyhtnorm._htnorm",
         source_files,
-        include_dirs=['/usr/include/', 'include'],
-        library_dirs=['/usr/lib'],
-        libraries=['cblas', 'lapacke', 'm'],
+        include_dirs=include_dirs,
+        library_dirs=library_dirs,
+        libraries=libraries,
+        extra_compile_args=['-std=c11']
     )
 ]
 
