@@ -13,7 +13,7 @@ CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pedantic -g -pthread \
 
 # set default include directory for BLAS include files
 INCLUDE_DIR ?= /usr/include
-override INCLUDE_DIRS := -I../include -I$(INCLUDE_DIR)
+override INCLUDE_DIR := -I../include -I$(INCLUDE_DIR)
 LDIR := ../lib
 # set default include directory for BLAS shared library
 LIBS_DIR ?= /usr/lib

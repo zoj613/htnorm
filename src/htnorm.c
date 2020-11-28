@@ -13,8 +13,8 @@ hyperplane_truncated_norm_1d_g(const ht_config_t* conf, double* out)
 {
     bool diag = conf->diag;
     size_t ncol = conf->gncol;
-    double r = *(conf->r);
-    const double* cov = conf->mean;
+    const double r = *(conf->r);
+    const double* cov = conf->cov;
     const double* g = conf->g;
 
     double alpha = 0, g_cov_g = 0;
