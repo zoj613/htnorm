@@ -8,6 +8,11 @@
 #include "blas.h"
 #include "dist.h"
 
+#ifdef HTNORM_COLMAJOR
+    #define COPY_TRIANGULAR_PART out->cov[nrow * i + j] = out->cov[nrow * j + i]
+#else
+    #define COPY_TRIANGULAR_PART out->cov[nrow * j + i] = out->cov[nrow * i + j]
+#endif
 
 /* Generate a sample from the standard normal distribution using the 
  * Marsaglia-Polar method.
@@ -89,9 +94,13 @@ mvn_rand_cov(rng_t* rng, const double* mean, const double* cov, size_t nrow,
     memcpy(factor, cov, nrow * nrow * sizeof(*factor));
     info = POTRF(nrow, factor, nrow);
     if (!info) {
-        // triangular matrix-vector product. U^T * z.
         std_normal_rand_fill(rng, nrow, out);
+        // triangular matrix-vector product. U^T * z.
+#ifdef HTNORM_COLMAJOR
+        TRMV(nrow, factor, nrow, out, 1);
+#else
         TRMV_T(nrow, factor, nrow, out, 1);
+#endif
         // out = out + mean, where out = L * z
         for (i = nrow; i--; )
             out[i] += mean[i];
@@ -107,6 +116,7 @@ mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t type,
               mvn_output_t* out, bool full_inv)
 {
     lapack_int info = 0;
+    size_t ldv;
     // if precision is diagonal then use a direct way to calculate output.
     if (type == IDENTITY) {
         std_normal_rand_fill(rng, nrow, out->v);
@@ -131,9 +141,15 @@ mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t type,
     if (!info) {
         // sample from N(0, prec) using cholesky factor (i.e, calculate U^T * z)
         std_normal_rand_fill(rng, nrow, out->v);
+#ifdef HTNORM_COLMAJOR
+        TRMV(nrow, factor, nrow, out->v, 1);
+        ldv = nrow;
+#else
         TRMV_T(nrow, factor, nrow, out->v, 1);
+        ldv = 1;
+#endif
         // solve system using cholesky factor to get: out ~ N(0, prec_inv)
-        info = POTRS(nrow, 1, factor, nrow, out->v, 1);
+        info = POTRS(nrow, 1, factor, nrow, out->v, ldv);
         if (!info) {
             // calculate the explicit inverse needed with the output
             info = POTRI(nrow, factor, nrow);
@@ -143,7 +159,7 @@ mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t type,
             if (full_inv)
                 for (size_t i = 0; i < nrow; i++)
                     for (size_t j = 0; j < i; j++)
-                        out->cov[nrow * j + i] = out->cov[nrow * i + j];
+                        COPY_TRIANGULAR_PART;
 
             return info;
         }

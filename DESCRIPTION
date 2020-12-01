@@ -1,0 +1,12 @@
+Package: htnorm
+Version: 0.1.1
+Title: Fast Simulation of Hyperplane-Truncated Multivariate Normal Distributions
+Author: Zolisa Bleki
+Maintainer: Zolisa Bleki <zolisa.bleki@gmail.com>
+Description: Fast Simulation of Hyperplane-Truncated Multivariate Normal Distributions.
+License: BSD_3_clause + file LICENSE
+URL: https://github.com/zoj613/htnorm
+BugReports: https://github.com/zoj613/htnorm/issues
+NeedsCompilation: yes
+Suggests: testthat
+Encoding: UTF-8
