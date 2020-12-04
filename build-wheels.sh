@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e -u -x
 # adapted from pypa's python-manylinux-demo and
-# https://github.com/sdispater/pendulum/blob/master/build-wheels.sh
+# https://github.com/pypa/python-manylinux-demo/blob/7e24ad2c202b6f58c55654f89c141bba749ca5d7/travis/build-wheels.sh
 
 # navigate to the root of the mounted project
 cd $(dirname $0)
@@ -17,7 +17,7 @@ export PATH=/opt/python/cp38-cp38/bin/:$PATH
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
 
 # install openblas
-yum install -y openblas-devel zip
+yum install -y openblas-devel
 
 function build_poetry_wheels
 {

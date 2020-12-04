@@ -17,7 +17,7 @@ cdef extern from "../include/rng.h":
     void rng_free(rng_t* rng) nogil
 
     rng_t* rng_pcg64_new() nogil
-    rng_t* rng_pcg64_new_seeded(uint64_t state) nogil
+    rng_t* rng_pcg64_new_seeded(uint64_t seed) nogil
 
     rng_t* rng_xrs128p_new() nogil
     rng_t* rng_xrs128p_new_seeded(uint64_t seed) nogil
