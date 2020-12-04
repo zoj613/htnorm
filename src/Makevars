@@ -1,7 +1,7 @@
 PKG_CPPFLAGS = -I../include -DHTNORM_COLMAJOR -I/usr/include
 PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) 
 
-OBJS = htnorm.o rng.o dist.o pcg64.o pcg32_minimal.o xoroshiro128p.o splitmax64.o
+OBJS = htnorm.o rng.o dist.o pcg64.o xoroshiro128p.o
 
 all:
 	@$(MAKE) $(SHLIB)
