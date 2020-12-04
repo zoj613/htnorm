@@ -1,0 +1,16 @@
+PKG_CPPFLAGS = -I../include -DHTNORM_COLMAJOR -I/usr/include
+PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) 
+
+OBJS = htnorm.o rng.o dist.o pcg64.o xoroshiro128p.o
+
+all:
+	@$(MAKE) $(SHLIB)
+	@rm -f *.mod src/*.o *.o
+
+$(SHLIB): r_wrapper.o
+
+r_wrapper.o: $(OBJS)
+htnorm.o: dist.o
+
+clean:
+	@rm -rf *.o *.mod *.d *.rc *.so *.dylib *.dll *.a *.lib $(SHLIB) $(OBJECTS)

@@ -36,7 +36,6 @@ The algorithms implemented have the following practical applications:
 
 Building a shared library of `htnorm` can be done with the following:
 ```bash
-$ cd src/
 # optionally set path to CBLAS and LAPACKE headers using INCLUDE_DIRS environmental variable
 $ export INCLUDE_DIRS="some/path/to/headers" 
 # optionally set path to BLAS installation shared library
@@ -158,10 +157,37 @@ The python API also exposes the `HTNGenerator` class as a Cython extension type
 that can be "cimported" in a cython script.
 
 
-## TODO
+## R API
 
-- Add an `R` interface to the library.
+One can also access the API in R. To install the package, use:
+```R
+devtools::install_github("zoj613/htnorm")
+```
+Note that you must have the cblas and lapacke headers available before installation.
 
+Below is an R translation of the above python example:
+
+```R
+library(htnorm)
+
+# make dummy data
+mean <- rnorm(1000)
+cov <- matrix(rnorm(1000 * 1000), ncol=1000)
+cov <- cov %*% t(cov)
+G <- matrix(rep(1, 1000), ncol=1000)
+r <- c(0)
+# initialize the Generator instance
+rng <- HTNGenerator(seed=12345, gen="pcg64")
+samples <- rng$hyperplane_truncated_mvnorm(mean, cov, G, r)
+#verify if sampled values sum to zero
+sum(samples)
+
+# alternatively one can pass a vector to store the results in
+out <- rep(0, 1000)
+rng$hyperplane_truncated_mvnorm(mean, cov, G, r, out = out)
+#verify
+sum(out)
+```
 
 ## Licensing
 

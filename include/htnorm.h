@@ -30,11 +30,6 @@
 
 #include "rng.h"
 
-#define INIT_HT_CONFIG(x) (x) = {.diag = false}
-
-// initialize a pointer to a `ht_config_t` struct.
-#define INIT_SP_CONFIG(x) \
-    (x) = {.struct_mean = false, .a_id = NORMAL, .o_id = NORMAL} 
 
 typedef enum {NORMAL, DIAGONAL, IDENTITY} type_t;
 
@@ -55,10 +50,15 @@ typedef struct {
     bool diag;
 } ht_config_t;
 
+// helper function to initialize values of the ht_config_t struct
+void init_ht_config(ht_config_t* conf, size_t gnrow, size_t gncol,
+                    const double* mean, const double* cov, const double* g,
+                    const double* r, bool diag);
+
 typedef struct {
     // Whether matrix A is regular (0), diagonal (1) or identity (2)
     type_t a_id;
-    // Whether matrix A is regular (0), diagonal (1) or identity (2)
+    // Whether matrix Omega is regular (0), diagonal (1) or identity (2)
     type_t o_id;
     // number of rows of phi matrix
     size_t pnrow;
@@ -75,6 +75,11 @@ typedef struct {
     // whether the mean is structure (i.e. made up of the covariance matrix)
     bool struct_mean; 
 } sp_config_t;
+
+// helper function to initialize values of the sp_config_t struct
+void init_sp_config(sp_config_t* conf, size_t pnrow, size_t pncol, const double* mean,
+                    const double* a, const double* phi, const double* omega,
+                    bool struct_mean, type_t a_id, type_t o_id);
 
 /* Sample from a multivariate normal distribution truncated on a hyperplane.
  *

@@ -1,0 +1,3 @@
+useDynLib(htnorm, .registration = TRUE, .fixes = "C_")
+
+export("HTNGenerator")

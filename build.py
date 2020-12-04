@@ -4,8 +4,6 @@ import os
 
 source_files = [
     "pyhtnorm/_htnorm.pyx",
-    "src/splitmax64.c",
-    "src/pcg32_minimal.c",
     "src/xoroshiro128p.c",
     "src/pcg64.c",
     "src/rng.c",
@@ -44,7 +42,7 @@ extensions = [
         include_dirs=include_dirs,
         library_dirs=library_dirs,
         libraries=libraries,
-        extra_compile_args=['-std=c11']
+        extra_compile_args=['-std=c99']
     )
 ]
 
