@@ -39,7 +39,7 @@ $(LDIR)/lib$(NAME).so: $(OBJ)
 	rm $(OBJ)
 
 clean:
-	rm -Rf $(LDIR)/* build/* dist/* pyhtnorm/*.c pythtnorm/%.so \
+	rm -Rf $(LDIR)/* build/* dist/* pyhtnorm/*.c pyhtnorm/*.so \
 		pyhtnorm/*.html pyhtnorm.egg-info src/*.o **/*__pycache__ \
 		**/*_snaps ..Rcheck src/*.so src/*.rds __pycache__
 
@@ -55,6 +55,7 @@ define make_wheels
 	docker container run -t --rm -e PLAT=$(strip $(subst quay.io/pypa/,,$(1))) \
 		-v $(shell pwd):/io $(1) /io/build-wheels.sh
 endef
+
 test:
 	pytest -v
 

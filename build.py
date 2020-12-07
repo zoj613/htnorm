@@ -3,7 +3,7 @@ import os
 
 
 source_files = [
-    "pyhtnorm/_htnorm.pyx",
+    "pyhtnorm/_htnorm.c",
     "src/xoroshiro128p.c",
     "src/pcg64.c",
     "src/rng.c",
