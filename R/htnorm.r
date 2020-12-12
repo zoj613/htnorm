@@ -4,20 +4,22 @@
 matrix_type <- c(0, 1, 2)
 
 
-info_error_message <- function(info) {
+validate_output <- function(res) {
 
-    if (info < 0) {
-        out <- paste0("Possible illegal value in one of the inputs")
+    if (res$info < 0) {
+        stop("Possible illegal value in one of the inputs")
     }
-    else {
-        out <- paste0(
-            "Either the leading minor of the ", info, "'th order is not
+    else if (res$info > 0) {
+        stop(
+            "Either the leading minor of the ", res$info, "'th order is not
             positive definite (meaning the covariance matrix is also not
             positive definite), or factorization of one of the inputs
-            returned a `U` with a zero in the ", info, "'th diagonal."
+            returned a factor with a zero in the ", res$info, "'th diagonal."
         )
     }
-    out
+    else {
+        res$out
+    }
 }
 
 
@@ -39,10 +41,7 @@ hptrunc_mvn <- function(rng, mean, cov, g, r, diag, out) {
 
     res <- .Call(C_hpmvn, rng, mean, cov, g, r, diag, out, PACKAGE = "htnorm")
 
-    if (res$info)
-        stop(info_error_message(res$info))
-
-    res$out
+    validate_output(res)
 }
 
 
@@ -83,10 +82,7 @@ strprec_mvn <- function(rng, mean, a, phi, omega, str_mean, a_id, o_id, out) {
         PACKAGE = "htnorm"
     )
 
-    if (res$info)
-        stop(info_error_message(res$info))
-
-    res$out
+    validate_output(res)
 }
 
 
@@ -113,13 +109,29 @@ HTNGenerator <- function(seed = NULL, gen = "xrs128p") {
     res$hyperplane_truncated_mvnorm <- function(
         mean, cov, g, r, diag = FALSE, out = NULL
     ) {
-        hptrunc_mvn(res$rng, mean, cov, g, r, diag, out)
+        if (is.null(out)) {
+            hptrunc_mvn(res$rng, mean, cov, g, r, diag, out)
+        }
+        else {
+            invisible(hptrunc_mvn(res$rng, mean, cov, g, r, diag, out))
+        }
     }
 
     res$structured_precision_mvnorm <- function(
         mean, a, phi, omega, str_mean = FALSE, a_type = 0, o_type = 0, out= NULL
     ) {
-        strprec_mvn(res$rng, mean, a, phi, omega, str_mean, a_type, o_type, out)
+        if (is.null(out)) {
+            strprec_mvn(
+                res$rng, mean, a, phi, omega, str_mean, a_type, o_type, out
+            )
+        }
+        else {
+            invisible(
+                strprec_mvn(
+                    res$rng, mean, a, phi, omega, str_mean, a_type, o_type, out
+                )
+            )
+        }
     }
 
     res
