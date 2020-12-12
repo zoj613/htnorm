@@ -10,3 +10,4 @@ BugReports: https://github.com/zoj613/htnorm/issues
 NeedsCompilation: yes
 Suggests: testthat
 Encoding: UTF-8
+RoxygenNote: 7.1.1
