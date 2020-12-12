@@ -86,6 +86,39 @@ strprec_mvn <- function(rng, mean, a, phi, omega, str_mean, a_id, o_id, out) {
 }
 
 
+#' Sample from a multivariate normal truncated on a hyperplane or a multivariate
+#' normal with a structured precision. `HTNGenerator` returns an object that
+#' can be used to sample from such a distribution.
+#'
+#' @param seed A random seed. It must be a positive integer. If not specified 
+#'  then it defaults to NULL, which means a random seed is used.
+#' @param gen The type of random number generator to use internally. It must
+#'  either "xrs128p" (Xoroshiro128plus) or "pcg64" (PCG64). If not specified
+#'  then this parameter defaults to "xrs128p".
+#' @return A generator object that can be used to sample from the supported
+#'  distributions.
+#' @references Cong, Yulai; Chen, Bo; Zhou, Mingyuan. Fast Simulation of 
+#'  Hyperplane-Truncated Multivariate Normal Distributions. Bayesian Anal. 
+#'  12 (2017), no. 4, 1017--1037. doi:10.1214/17-BA1052.
+#'  https://projecteuclid.org/euclid.ba/1488337478
+#'
+#' @examples
+#' mean <- rnorm(1000)
+#' cov <- matrix(rnorm(1000 * 1000), ncol=1000)
+#' cov <- cov %*% t(cov)
+#' G <- matrix(rep(1, 1000), ncol=1000)
+#' r <- c(0)
+#' rng <- HTNGenerator(seed=12345, gen="pcg64")
+#' samples <- rng$hyperplane_truncated_mvnorm(mean, cov, G, r)
+#' # verify if sampled values sum to zero
+#' sum(samples)
+#'
+#' out <- rep(0, 1000)
+#' eig <- eigen(cov)
+#' phi <- eig$vectors
+#' omega <- diag(eig$values)
+#' a <- diag(runif(length(mean)))
+#' rng$structured_precision_mvnorm(mean, a, phi, omega, a_type = 1, out = out)
 HTNGenerator <- function(seed = NULL, gen = "xrs128p") {
 
     if (is.numeric(seed)) {
