@@ -8,17 +8,17 @@
 #include "blas.h"
 #include "dist.h"
 
-#ifdef HTNORM_COLMAJOR
-    #define COPY_TRIANGULAR_PART out->cov[nrow * i + j] = out->cov[nrow * j + i]
-#else
-    #define COPY_TRIANGULAR_PART out->cov[nrow * j + i] = out->cov[nrow * i + j]
-#endif
+#define std_normal_rand_fill(rng_t, arr_size, arr) \
+    for (size_t inc = (arr_size); inc--;) (arr)[inc] = std_normal_rand((rng_t))
+
+extern ALWAYS_INLINE(mvn_output_t*) mvn_output_new(size_t nrow, type_t factor_type);
+extern ALWAYS_INLINE(void) mvn_output_free(mvn_output_t* a);
 
 /* Generate a sample from the standard normal distribution using the 
  * Marsaglia-Polar method.
  *
  * TODO: Think about using a faster one, maybe the Ziggurat method?*/
-static double
+static ALWAYS_INLINE(double)
 std_normal_rand(rng_t* rng)
 {
     double s, u, v, z;
@@ -41,35 +41,6 @@ std_normal_rand(rng_t* rng)
     x = u * z;
     cached = true;
     return x;
-}
-
-
-static inline void
-std_normal_rand_fill(rng_t* rng, size_t n, double* out)
-{
-    for (size_t i = n; i--; )
-        out[i] = std_normal_rand(rng);
-}
-
-
-inline mvn_output_t*
-mvn_output_new(size_t nrow)
-{
-    mvn_output_t* out = malloc(sizeof(mvn_output_t));
-    if (out != NULL) {
-        out->v = malloc(nrow * sizeof(*out->v));
-        out->cov = calloc(nrow * nrow, sizeof(*out->cov));
-    }
-    return out;
-}
-
-
-inline void
-mvn_output_free(mvn_output_t* a)
-{
-    free(a->cov);
-    free(a->v);
-    free(a);
 }
 
 
@@ -112,59 +83,40 @@ mvn_rand_cov(rng_t* rng, const double* mean, const double* cov, size_t nrow,
 
 
 int
-mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t type,
-              mvn_output_t* out, bool full_inv)
+mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t prec_type,
+              mvn_output_t* out)
 {
     lapack_int info = 0;
-    size_t ldv;
-    // if precision is diagonal then use a direct way to calculate output.
-    if (type == IDENTITY) {
-        std_normal_rand_fill(rng, nrow, out->v);
-        return info;
-    }
-    else if (type == DIAGONAL) {
-        size_t diag_index;
-        for (size_t i = nrow; i--; ) {
-            diag_index = nrow * i + i;
-            out->cov[diag_index] = 1.0 / prec[diag_index];
-            out->v[i] = std_normal_rand(rng) * sqrt(out->cov[diag_index]);
-        }
-        return info;
-    }
-
-    double* factor = malloc(nrow * nrow * sizeof(*factor));
-    if (factor == NULL)
-        return HTNORM_ALLOC_ERROR;
-
-    memcpy(factor, prec, nrow * nrow * sizeof(*prec));
-    info = POTRF(nrow, factor, nrow);
-    if (!info) {
-        // sample from N(0, prec) using cholesky factor (i.e, calculate U^T * z)
-        std_normal_rand_fill(rng, nrow, out->v);
-#ifdef HTNORM_COLMAJOR
-        TRMV(nrow, factor, nrow, out->v, 1);
-        ldv = nrow;
-#else
-        TRMV_T(nrow, factor, nrow, out->v, 1);
-        ldv = 1;
-#endif
-        // solve system using cholesky factor to get: out ~ N(0, prec_inv)
-        info = POTRS(nrow, 1, factor, nrow, out->v, ldv);
-        if (!info) {
-            // calculate the explicit inverse needed with the output
-            info = POTRI(nrow, factor, nrow);
-            // replace cov with factor to avoid a copy of the contents
-            free(out->cov);
-            out->cov = factor;
-            if (full_inv)
-                for (size_t i = 0; i < nrow; i++)
-                    for (size_t j = 0; j < i; j++)
-                        COPY_TRIANGULAR_PART;
-
+    switch (prec_type) {
+        case IDENTITY:
+            // if precision is diagonal then use a direct way to calculate output.
+            std_normal_rand_fill(rng, nrow, out->v);
+            for (size_t i = nrow; i--; )
+                out->factor[i] = 1.0;
             return info;
-        }
+        case DIAGONAL:
+            // we save the factor as the precision since it is diagonal. This
+            // way we get to save computation steps later when required to
+            // reconstruct the full precision by squaring it's factor.
+            for (size_t i = nrow; i--; ) {
+                out->factor[i] = prec[nrow * i + i];
+                out->v[i] = std_normal_rand(rng) / sqrt(prec[nrow * i + i]);
+            }
+            return info;
+        default:
+            // when precision matrix is neither diagonal nor identity
+            memcpy(out->factor, prec, nrow * nrow * sizeof(*prec));
+            info = POTRF(nrow, out->factor, nrow);
+            if (!info) {
+                std_normal_rand_fill(rng, nrow, out->v);
+                // solve a triangular system Ux = v to get a sample from N(0, prec)
+                // where `U` is the cholesky factor of the precision matrix
+#ifdef HTNORM_COLMAJOR
+                TRTRS_T(nrow, 1, out->factor, nrow, out->v, nrow);
+#else
+                TRTRS(nrow, 1, out->factor, nrow, out->v, 1);
+#endif
+            }
+            return info;
     }
-
-    free(factor);
-    return info;
 }
