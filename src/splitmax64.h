@@ -11,8 +11,10 @@ See <http://creativecommons.org/publicdomain/zero/1.0/>. */
 
 #include <stdint.h>
 
+#include "always_inline.h"
+
 // generate a postive integer using the splitmix64 bit generator
-static inline uint64_t
+static ALWAYS_INLINE(uint64_t)
 splitmix64_next64(uint64_t* state)
 {
 	uint64_t z = (*state += 0x9e3779b97f4a7c15);

@@ -1,10 +1,14 @@
 // *Really* minimal PCG32 code / (c) 2014 M.E. O'Neill / pcg-random.org
 // Licensed under Apache License 2.0 (NO WARRANTY, etc. see website)
+//
+// Modifications: Make the function always inlineale to reduce all overhead
 
 #ifndef HTNORM_PCG32_H
 #define HTNORM_PCG32_H
 
 #include <stdint.h>
+
+#include "always_inline.h"
 
 typedef struct pcg32_rand {
     uint64_t state;
@@ -12,7 +16,8 @@ typedef struct pcg32_rand {
 } pcg32_random_t;
 
 
-static inline uint32_t pcg32_random_r(pcg32_random_t* rng)
+static ALWAYS_INLINE(uint32_t)
+pcg32_random_r(pcg32_random_t* rng)
 {
     uint64_t oldstate = rng->state;
     // Advance internal state

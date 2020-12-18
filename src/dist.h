@@ -14,23 +14,10 @@
 
 #include "../include/rng.h"
 #include "../include/htnorm.h"
+#include "always_inline.h"
 
 // error number for failed memory allocation throughout the library
 #define HTNORM_ALLOC_ERROR -100
-
-#if defined(__GNUC__)
-    #define ALWAYS_INLINE(ret_type) inline ret_type __attribute__((always_inline))
-#elif defined(__clang__)
-    #if __has_attribute(always_inline)
-        #define ALWAYS_INLINE(ret_type) inline ret_type __attribute__((always_inline))
-    #else
-        #define ALWAYS_INLINE(ret_type) inline ret_type
-    #endif
-#elif defined(_MSC_VER)
-    #define ALWAYS_INLINE(ret_type) __forceinline ret_type
-#else
-    #define ALWAYS_INLINE(ret_type) inline ret_type
-#endif
 
 /* Stores the output of sampling from a MVN using the precision matrix.
  * `v` is the sampled vector and `factor` is the computed cholesky factor of 

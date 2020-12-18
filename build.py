@@ -4,8 +4,6 @@ import os
 
 source_files = [
     "pyhtnorm/_htnorm.c",
-    "src/xoroshiro128p.c",
-    "src/pcg64.c",
     "src/rng.c",
     "src/dist.c",
     "src/htnorm.c"
