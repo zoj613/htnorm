@@ -14,22 +14,49 @@
 
 #include "../include/rng.h"
 #include "../include/htnorm.h"
+#include "always_inline.h"
 
 // error number for failed memory allocation throughout the library
 #define HTNORM_ALLOC_ERROR -100
 
 /* Stores the output of sampling from a MVN using the precision matrix.
- * `v` is the sampled vector and `cov` is the computed inverse of the precision */
-typedef struct mvn_output {
-    double* v;
-    double* cov;
+ * `v` is the sampled vector and `factor` is the computed cholesky factor of 
+ * the precision */
+typedef struct {
+    double* restrict v;
+    double* restrict factor;
 } mvn_output_t;
 
 /* Get an instance of the `mvn_output_t` struct pointer whose elements have
  * dimension `nrow`. The members are allocated memeory on the heap, and thus
  * need to free'd using `mvn_output_free` when no longer needed.*/
-mvn_output_t* mvn_output_new(size_t nrow);
-void mvn_output_free(mvn_output_t* a);
+ALWAYS_INLINE(mvn_output_t*)
+mvn_output_new(size_t nrow, type_t factor_type)
+{
+    mvn_output_t* out = malloc(sizeof(mvn_output_t));
+    if (out != NULL) {
+        out->v = malloc(nrow * sizeof(*out->v));
+        // allocate space needed based on factor matrix type
+        switch(factor_type) {
+            case DIAGONAL:
+            case IDENTITY:
+                out->factor = malloc(nrow * sizeof(*out->factor));
+                break;
+            default:
+                out->factor = calloc(nrow * nrow, sizeof(*out->factor));
+        }
+    }
+    return out;
+}
+
+
+ALWAYS_INLINE(void)
+mvn_output_free(mvn_output_t* a)
+{
+    free(a->factor);
+    free(a->v);
+    free(a);
+}
 
 /* Generate a vector from a MVN of specied mean and covariance.
  *
@@ -55,7 +82,7 @@ void mvn_output_free(mvn_output_t* a);
  *  value of zero means the sampling was successful, else it failed.
  */
 int mvn_rand_cov(rng_t* rng, const double* mean, const double* mat, size_t nrow,
-                 bool diag, double* out);
+                 bool diag, double* restrict out);
 
 /* Generate a vector from a MVN of zero mean and a specified precision matrix.
  *
@@ -67,7 +94,7 @@ int mvn_rand_cov(rng_t* rng, const double* mean, const double* mat, size_t nrow,
  *      The precision matrix.
  *  nrow:
  *      The dimension of the matrix.
- *  type:
+ *  prec_type:
  *      Whether the precision is NORMAL, DIAGONAL or IDENTITY.
  *  out:
  *      The array to store the generated sample.
@@ -77,7 +104,7 @@ int mvn_rand_cov(rng_t* rng, const double* mean, const double* mat, size_t nrow,
  *  And integer to indicate whether the function completed successfully. A
  *  value of zero means the sampling was successful, else it failed.
  */
-int mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t type,
-                  mvn_output_t* out, bool full_inv);
+int mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t prec_type,
+                  mvn_output_t* out);
 
 #endif

@@ -5,12 +5,12 @@
 #include <time.h>
 
 #include "pcg64.h"
-#include "splitmax64.h"
 #include "xoroshiro128p.h"
+
 #include "../include/rng.h"
 
 
-inline void
+ALWAYS_INLINE(void)
 rng_free(rng_t* rng)
 {
     free(rng->base);
@@ -23,20 +23,23 @@ rng_pcg64_new_seeded(uint64_t seed)
 {
     rng_t* rng = malloc(sizeof(rng_t));
     if (rng != NULL) {
-        pcg64_random_t* base = pcg64_init(seed);
-        rng->base = base;
-        rng->next_int = base->next_int;
-        rng->next_double = base->next_double;
+        pcg64_random_t* pcg = malloc(sizeof(pcg64_random_t));
+        if (pcg != NULL) {
+            pcg32_init(pcg->gen, &seed);
+            pcg32_init(pcg->gen + 1, &seed);
+            rng->base = pcg;
+            rng->next_int = pcg64_next_int;
+            rng->next_double = pcg64_next_double;
+        }
     }
     return rng;
 }
 
 
-inline rng_t*
+ALWAYS_INLINE(rng_t*)
 rng_pcg64_new(void)
 {
-    uint64_t seed = time(NULL);
-    return rng_pcg64_new_seeded((intptr_t)&seed);
+    return rng_pcg64_new_seeded((uint64_t)time(NULL));
 }
 
 
@@ -45,18 +48,21 @@ rng_xrs128p_new_seeded(uint64_t seed)
 {
     rng_t* rng = malloc(sizeof(rng_t));
     if (rng != NULL) {
-        xrs128p_random_t* base = xrs128p_init(seed);
-        rng->base = base;
-        rng->next_int = base->next_int;
-        rng->next_double = base->next_double;
+        xrs128p_random_t* xrs = malloc(sizeof(xrs128p_random_t));
+        if (xrs != NULL) {
+            xrs->s[0] = splitmix64_next64(&seed);
+            xrs->s[1] = splitmix64_next64(&seed);
+            rng->base = xrs;
+            rng->next_int = xrs128p_next_int;
+            rng->next_double = xrs128p_next_double;
+        }
     }
     return rng;
 }
 
 
-inline rng_t*
+ALWAYS_INLINE(rng_t*)
 rng_xrs128p_new(void)
 {
-    uint64_t seed = time(NULL);
-    return rng_xrs128p_new_seeded((intptr_t)&seed);
+    return rng_xrs128p_new_seeded((uint64_t)time(NULL));
 }

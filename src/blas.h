@@ -64,6 +64,12 @@
 
 
 /* LAPACKE macros */
+#define TRTRS(n, nrhs, a, lda, b, ldb) \
+    LAPACKE_dtrtrs(LapackeLayout, LapackePart, 'N', 'N', (n), (nrhs), (a), (lda), (b), (ldb))
+
+#define TRTRS_T(n, nrhs, a, lda, b, ldb) \
+    LAPACKE_dtrtrs(LapackeLayout, LapackePart, 'T', 'N', (n), (nrhs), (a), (lda), (b), (ldb))
+
 #define POTRF(n, a, lda) \
     LAPACKE_dpotrf(LapackeLayout, LapackePart, (n), (a), (lda))
 

@@ -182,13 +182,17 @@ cdef class HTNGenerator:
 
         if out is None:
             out = array.clone(self.pyarr, mean.shape[0], zero=False)
+            self.noreturn = False
+        else:
+            self.noreturn = True
 
         with nogil:
             info = hplane_mvn(self.rng, &config, &out[0])
 
         validate_return_info(info)
-        # return the base object of the memoryview
-        return out.base
+        if not self.noreturn:
+            # return the base object of the memoryview
+            return out.base
 
     cpdef structured_precision_mvnorm(
         self,
@@ -279,9 +283,14 @@ cdef class HTNGenerator:
 
         if out is None:
             out = array.clone(self.pyarr, mean.shape[0], zero=False)
+            self.noreturn = False
+        else:
+            self.noreturn = True
 
         with nogil:
             info = str_prec_mvn(self.rng, &config, &out[0])
 
         validate_return_info(info)
-        return out.base
+        if not self.noreturn:
+            # return the base object of the memoryview
+            return out.base

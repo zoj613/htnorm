@@ -12,6 +12,7 @@ from pyhtnorm.c_htnorm cimport rng_t
 cdef class HTNGenerator:
     cdef rng_t* rng
     cdef array.array pyarr
+    cdef object noreturn
     cpdef hyperplane_truncated_mvnorm(
         self,
         double[:] mean,

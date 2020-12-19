@@ -8,7 +8,7 @@ CC := gcc
 CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pedantic -g -pthread \
 	-DNDEBUG -ffast-math -Wall -Wextra -Werror -Wsign-compare -Wunused \
 	-Wno-unused-result -Wpointer-arith -Wcast-qual -Wmissing-prototypes \
-	-Wno-missing-braces
+	-Wno-missing-braces -Wstrict-aliasing -fstrict-aliasing -Winline
 
 # set default include directory for BLAS include files
 INCLUDE_DIR ?= /usr/include

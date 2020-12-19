@@ -102,7 +102,7 @@ void init_sp_config(sp_config_t* conf, size_t pnrow, size_t pncol, const double*
  *  factorization of the covariance was not successful. A negative integer is
  *  returned if one of the inputs contains an illegal value (non-numerical/NaN).
  */
-int htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out);
+int htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* restrict out);
 
 
 /* Sample from a MVN with a structured precision matrix and/or structured mean.
@@ -128,6 +128,6 @@ int htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* ou
  *  factorization of the covariance was not successful. A negative integer is
  *  returned if one of the inputs contains an illegal value (non-numerical/NaN).
  * */
-int htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* out);
+int htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* restrict out);
 
 #endif
