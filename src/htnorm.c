@@ -40,13 +40,11 @@ init_sp_config(sp_config_t* conf, size_t pnrow, size_t pncol, const double* mean
 
 // special case for when g matrix has dimensions 1 by n (a 1d array)
 static ALWAYS_INLINE(int)
-hyperplane_truncated_norm_1d_g(const ht_config_t* conf, double* out)
+hyperplane_truncated_norm_1d_g(const ht_config_t* conf, double* restrict out)
 {
-    bool diag = conf->diag;
-    size_t ncol = conf->gncol;
-    const double r = *(conf->r);
-    const double* cov = conf->cov;
-    const double* g = conf->g;
+    const size_t ncol = conf->gncol;
+    const double* const cov = conf->cov;
+    const double* const g = conf->g;
 
     double alpha = 0, g_cov_g = 0;
     size_t i, j;
@@ -58,10 +56,10 @@ hyperplane_truncated_norm_1d_g(const ht_config_t* conf, double* out)
     // compute: r - g * y; where y ~ N(mean, cov)
     for (i = ncol; i--; )
         alpha +=  g[i] * out[i]; 
-    alpha = r - alpha;
+    alpha = *conf->r - alpha;
 
     // compute: cov * g^T
-    if (diag) {
+    if (conf->diag) {
         // optimize when cov if diagonal
         for (i = ncol; i--; )
             cov_g[i] = cov[ncol * i + i] * g[i];
@@ -84,7 +82,7 @@ hyperplane_truncated_norm_1d_g(const ht_config_t* conf, double* out)
 
 
 int
-htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out)
+htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* restrict out)
 {
     const size_t gncol = conf->gncol;  // equal to the dimension of the covariance
     const size_t gnrow = conf->gnrow;
@@ -189,7 +187,7 @@ compute_omega_inverse(type_t o_type, size_t n, mvn_output_t* out)
 
 
 int
-htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* out)
+htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* restrict out)
 {
     lapack_int info;
     const size_t pnrow = conf->pnrow;

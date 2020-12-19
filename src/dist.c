@@ -46,7 +46,7 @@ std_normal_rand(rng_t* rng)
 
 int
 mvn_rand_cov(rng_t* rng, const double* mean, const double* cov, size_t nrow,
-             bool diag, double* out)
+             bool diag, double* restrict out)
 {
     lapack_int info = 0;
     size_t i;

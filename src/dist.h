@@ -23,8 +23,8 @@
  * `v` is the sampled vector and `factor` is the computed cholesky factor of 
  * the precision */
 typedef struct {
-    double* v;
-    double* factor;
+    double* restrict v;
+    double* restrict factor;
 } mvn_output_t;
 
 /* Get an instance of the `mvn_output_t` struct pointer whose elements have
@@ -82,7 +82,7 @@ mvn_output_free(mvn_output_t* a)
  *  value of zero means the sampling was successful, else it failed.
  */
 int mvn_rand_cov(rng_t* rng, const double* mean, const double* mat, size_t nrow,
-                 bool diag, double* out);
+                 bool diag, double* restrict out);
 
 /* Generate a vector from a MVN of zero mean and a specified precision matrix.
  *
