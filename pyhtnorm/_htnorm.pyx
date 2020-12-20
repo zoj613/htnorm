@@ -57,9 +57,7 @@ cdef class HTNGenerator:
         The name of the generator to use for random number generation. The
         value needs to be one of {'pcg', 'xrs'}, where 'pcg' is PCG64 and 'xrs'
         is the Xoroshiro128plus bit generator.
-
-    Methods
-    -------
+Methods -------
     hyperplane_truncated_mvnorm(mean, cov, g, r, diag=False, out=False)
     structured_precision_mvnorm(mean, a, phi, omega, mean_structured=False,
                                 a_type=0, o_type=0, out=None)
@@ -257,7 +255,7 @@ cdef class HTNGenerator:
         if (omega.shape[0] != omega.shape[1]) or (a.shape[0] != a.shape[1]):
             raise ValueError('`omega` and `a` both need to be square matrices')
 
-        if (phi.shape[1] != omega.shape[0]) or (phi.shape[0] != a.shape[1]):
+        if (phi.shape[0] != omega.shape[0]) or (phi.shape[1] != a.shape[0]):
             raise ValueError(
                 "Shapes of `phi`, `omega` and `a` are not consistent"
             )
