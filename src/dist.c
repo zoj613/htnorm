@@ -7,6 +7,7 @@
 
 #include "blas.h"
 #include "dist.h"
+#include "zig_constants.h"
 
 #define std_normal_rand_fill(rng_t, arr_size, arr) \
     for (size_t inc = (arr_size); inc--;) (arr)[inc] = std_normal_rand((rng_t))
@@ -14,34 +15,45 @@
 extern ALWAYS_INLINE(mvn_output_t*) mvn_output_new(size_t nrow, type_t factor_type);
 extern ALWAYS_INLINE(void) mvn_output_free(mvn_output_t* a);
 
-/* Generate a sample from the standard normal distribution using the 
- * Marsaglia-Polar method.
- *
- * TODO: Think about using a faster one, maybe the Ziggurat method?*/
+// Generate a sample from the standard normal distribution using the Ziggurat method.
+// This uses numpy's implementation of the algorithm.
 static ALWAYS_INLINE(double)
 std_normal_rand(rng_t* rng)
 {
-    double s, u, v, z;
-    static double x, y;
-    static bool cached = false;
+    uint64_t r, rabs;
+    int sign, idx;
+    double x, xx, yy;
 
-    if (cached) {
-        cached = false;
-        return y;
+    for (;;) {
+        r = rng->next_int(rng->base);
+        idx = r & 0xff;
+        r >>= 8;
+        sign = r & 0x1;
+        rabs = (r >> 1) & 0x000fffffffffffff;
+        x = rabs * wi_double[idx];
+
+        if (sign & 0x1)
+            x = -x;
+        if (rabs < ki_double[idx])
+            return x; /* 99.3% of the time return here */
+
+        if (idx == 0) {
+            // use tail sampling method.
+            for (;;) {
+            xx = -ziggurat_nor_inv_r * log(1.0 - rng->next_double(rng->base));
+            yy = -log(1.0 - rng->next_double(rng->base));
+            if (yy + yy > xx * xx)
+                return ((rabs >> 8) & 0x1) ? -(ziggurat_nor_r + xx) : ziggurat_nor_r + xx;
+            }
+        }
+        else {
+            // try and get a sample at the wedge.
+            if (((fi_double[idx - 1] - fi_double[idx]) *
+                rng->next_double(rng->base) + fi_double[idx]) < exp(-0.5 * x * x))
+            return x;
+        }
     }
-
-    do {
-        u = 2.0 * rng->next_double(rng->base) - 1;
-        v = 2.0 * rng->next_double(rng->base) - 1;
-        s = u * u + v * v;
-    } while (!(s < 1.0));
-
-    z = sqrt(-2 * log(s) / s);
-    y = v * z;
-    x = u * z;
-    cached = true;
-    return x;
-}
+} 
 
 
 int
