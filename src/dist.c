@@ -12,8 +12,6 @@
 #define std_normal_rand_fill(rng_t, arr_size, arr) \
     for (size_t inc = (arr_size); inc--;) (arr)[inc] = std_normal_rand((rng_t))
 
-extern ALWAYS_INLINE(mvn_output_t*) mvn_output_new(size_t nrow, type_t factor_type);
-extern ALWAYS_INLINE(void) mvn_output_free(mvn_output_t* a);
 
 // Generate a sample from the standard normal distribution using the Ziggurat method.
 // This uses numpy's implementation of the algorithm.
