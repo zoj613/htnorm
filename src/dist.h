@@ -30,7 +30,7 @@ typedef struct {
 /* Get an instance of the `mvn_output_t` struct pointer whose elements have
  * dimension `nrow`. The members are allocated memeory on the heap, and thus
  * need to free'd using `mvn_output_free` when no longer needed.*/
-ALWAYS_INLINE(mvn_output_t*)
+static ALWAYS_INLINE(mvn_output_t*)
 mvn_output_new(size_t nrow, type_t factor_type)
 {
     mvn_output_t* out = malloc(sizeof(mvn_output_t));
@@ -50,7 +50,7 @@ mvn_output_new(size_t nrow, type_t factor_type)
 }
 
 
-ALWAYS_INLINE(void)
+static ALWAYS_INLINE(void)
 mvn_output_free(mvn_output_t* a)
 {
     free(a->factor);

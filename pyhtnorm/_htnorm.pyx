@@ -57,7 +57,9 @@ cdef class HTNGenerator:
         The name of the generator to use for random number generation. The
         value needs to be one of {'pcg', 'xrs'}, where 'pcg' is PCG64 and 'xrs'
         is the Xoroshiro128plus bit generator.
-Methods -------
+
+    Methods
+    -------
     hyperplane_truncated_mvnorm(mean, cov, g, r, diag=False, out=False)
     structured_precision_mvnorm(mean, a, phi, omega, mean_structured=False,
                                 a_type=0, o_type=0, out=None)
