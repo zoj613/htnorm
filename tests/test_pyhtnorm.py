@@ -20,11 +20,13 @@ def hypertruncated_mvn_data():
 
 @pytest.fixture
 def structured_mvn_data(hypertruncated_mvn_data):
-    mean, cov, _, _ = hypertruncated_mvn_data
+    mean, cov, _, r = hypertruncated_mvn_data
     k1 = mean.shape[0]
+    k2 = r.shape[0]
     gg = np.random.Generator(np.random.PCG64(0))
     omega, phi = np.linalg.eigh(cov)
-    omega = np.diag(omega)
+    phi = phi[:k2, :]
+    omega = np.diag(omega[:k2])
     a = np.diag(gg.random(k1))
     return mean, a, omega, phi
 
@@ -50,11 +52,10 @@ def test_hypertruncated_mvn(hypertruncated_mvn_data):
         G2 = np.ascontiguousarray(G[:, :10])
         g.hyperplane_truncated_mvnorm(mean, cov, G2, r)
 
-    # raise ValueError is input has non-numerical values
-    with pytest.raises(ValueError):
-        mean2 = mean.copy()
-        mean2[0] = np.nan
-        g.hyperplane_truncated_mvnorm(mean2, cov, G, r)
+    # test for non numerical input
+    mean2 = mean.copy()
+    mean2[0] = np.nan
+    assert np.alltrue(np.isnan(g.hyperplane_truncated_mvnorm(mean2, cov, G, r)))
 
     # test consistency of output when `diag=True` is used for same seed
     cov_diag = np.diag(np.random.rand(cov.shape[0]))
@@ -94,10 +95,11 @@ def test_structured_mvn(structured_mvn_data):
     with pytest.raises(ValueError):
         g.structured_precision_mvnorm(mean, a, phi, omega, a_type=-1000)
     # rest for non-numerical values
-    with pytest.raises(ValueError):
-        a2 = a.copy()
-        a2[0] = np.nan
-        g.structured_precision_mvnorm(mean, a2, phi, omega)
+    a2 = a.copy()
+    a2[0] = np.nan
+    assert np.alltrue(
+        np.isnan(g.structured_precision_mvnorm(mean, a2, phi, omega))
+    )
     # test consistency of output when `a_type` or `o_type` is given
     g = HTNGenerator(10)
     arr1 = g.structured_precision_mvnorm(mean, a, phi, omega)
