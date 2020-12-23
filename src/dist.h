@@ -31,7 +31,7 @@ typedef struct {
  * dimension `nrow`. The members are allocated memeory on the heap, and thus
  * need to free'd using `mvn_output_free` when no longer needed.*/
 static ALWAYS_INLINE(mvn_output_t*)
-mvn_output_new(size_t nrow, type_t factor_type)
+mvn_output_new(int nrow, type_t factor_type)
 {
     mvn_output_t* out = malloc(sizeof(mvn_output_t));
     if (out != NULL) {
@@ -81,7 +81,7 @@ mvn_output_free(mvn_output_t* a)
  *  And integer to indicate whether the function completed successfully. A
  *  value of zero means the sampling was successful, else it failed.
  */
-int mvn_rand_cov(rng_t* rng, const double* mean, const double* mat, size_t nrow,
+int mvn_rand_cov(rng_t* rng, const double* mean, const double* mat, int nrow,
                  bool diag, double* restrict out);
 
 /* Generate a vector from a MVN of zero mean and a specified precision matrix.
@@ -104,7 +104,7 @@ int mvn_rand_cov(rng_t* rng, const double* mean, const double* mat, size_t nrow,
  *  And integer to indicate whether the function completed successfully. A
  *  value of zero means the sampling was successful, else it failed.
  */
-int mvn_rand_prec(rng_t* rng, const double* prec, size_t nrow, type_t prec_type,
+int mvn_rand_prec(rng_t* rng, const double* prec, int nrow, type_t prec_type,
                   mvn_output_t* out);
 
 #endif

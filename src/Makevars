@@ -1,4 +1,4 @@
-PKG_CPPFLAGS = -I../include -DHTNORM_COLMAJOR -I/usr/include
+PKG_CPPFLAGS = -I../include -DHTNORM_COLMAJOR
 PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) 
 
 OBJS = htnorm.o rng.o dist.o
