@@ -1,6 +1,6 @@
 # htnorm
 
-This repo provides a C implementation of a fast and exact sampler from a 
+This repo provides a C implementation of a fast and exact sampling algorithm for a 
 multivariate normal distribution (MVN) truncated on a hyperplane as described [here][1]
 
 this repo implements the following from the paper:
@@ -27,29 +27,25 @@ The algorithms implemented have the following practical applications:
 
 ## Dependencies
 
-- a C compiler that supports the C99 standard or later
-- an installation of BLAS and LAPACK that exposes its C interface via the headers `<cblas.h>` and `<lapacke.h>`
-(e.g openBLAS).
-
+- A C compiler that implements the C99 standard or later
+- An installation of `LAPACK`.
 
 ## Usage
 
 Building a shared library of `htnorm` can be done with the following:
 ```bash
-# optionally set path to CBLAS and LAPACKE headers using INCLUDE_DIRS environmental variable
-$ export INCLUDE_DIRS="some/path/to/headers" 
-# optionally set path to BLAS installation shared library
-$ export LIBS_DIR="some/path/to/library/"
-# optionally set the linker flag for your BLAS installation (e.g -lopenblas)
-$ export LIBS=<flag here>
+# optionally set path to LAPACK shared library
+$ export LIBS_DIR="some/path/to/lib/"
 $ make lib
 ```
 Afterwards the shared library will be found in a `lib/` directory of the project root,
 and the library can be linked dynamically via `-lhtnorm`.
 
 The puplic API exposes the samplers through the function declarations
-- `int htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out)`
-- `int htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* out)`
+```C
+ int htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out);
+ int htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* out);
+```
 
 The details of the parameters are documented in ther header files ["htnorm.h"][4].
 
@@ -61,32 +57,19 @@ The API allows using a custom generator, and the details are documented in the h
 ```C
 #include "htnorm.h"
 
-int main ()
+int main (void)
 {
     ...
-
     // instantiate a random number generator
-    rng_t* rng = rng_new_pcg64();
+    rng_t* rng = rng_new_pcg64_seeded(12345);
     ht_config_t config;
-    config.g = ...; // G matrix
-    config.gnrow = ...; // number of rows of G
-    config.gncol = ...; // number of columns of G
-    cofig.r = ...; // r array
-    config.mean = ...; // mean array
-    config.cov = ...; // the convariance matrix
-    confi.diag = ...; // whether covariance is diagonal
-
-    double* samples = ...; // array to store the samples
-    // now call the sampler
-    int res_info = htn_hyperplane_truncated_mvn(rng, &config, samples);
-
-    // res_info contains a number that indicates whether sampling failed or not.
-
+    init_ht_config(&config, ...);
+    double* out = ...; // array to store the samples
+    int res = htn_hyperplane_truncated_mvn(rng, &config, out);
+    // res contains a number that indicates whether sampling failed or not.
     ...
-
     // finally free the RNG pointer at some point
     rng_free(rng);
-
     ...
     return 0;
 }
@@ -101,13 +84,8 @@ pip install pyhtnorm
 ```
 Wheels are not provided for MacOS. To install via pip, one can run the following commands:
 ```bash
-#set the path to BLAS installation headers
-export INCLUDE_DIR=<path/to/headers>
-#set the path to BLAS shared library
+#set the path to LAPACK shared library
 export LIBS_DIR=<some directory>
-#set the name of the BLAS shared library (e.g. "openblas")
-export LIBS=<lib name>
-# finally install via pip so the compilation and linking can be done correctly
 pip install pyhtnorm
 ```
 Alternatively, one can install it from source. This requires an installation of [poetry][7] and the following shell commands:
@@ -140,14 +118,11 @@ r = np.zeros(k2)
 mean = npy_rng.random(k1)
 
 samples = rng.hyperplane_truncated_mvnorm(mean, cov, G, r)
-# verify if sampled values sum to zero
-print(sum(samples))
-
+print(sum(samples))  # verify if sampled values sum to zero
 # alternatively one can pass an array to store the results in
 out = np.empty(k1)
 rng.hyperplane_truncated_mvnorm(mean, cov, G, r, out=out)
-# verify
-print(out.sum())
+print(out.sum())  # verify
 ```
 
 For more details about the parameters of the `HTNGenerator` and its methods,
@@ -159,12 +134,12 @@ that can be "cimported" in a cython script.
 
 ## R API
 
-One can also access the API in R. To install the package, use:
+One can also access the API in R. To install the package, use one the following 
+commands:
 ```R
 devtools::install_github("zoj613/htnorm")
+pak::pkg_install("zoj613/htnorm")
 ```
-Note that you must have the cblas and lapacke headers available before installation.
-
 Below is an R translation of the above python example:
 
 ```R
@@ -185,8 +160,7 @@ sum(samples)
 # alternatively one can pass a vector to store the results in
 out <- rep(0, 1000)
 rng$hyperplane_truncated_mvnorm(mean, cov, G, r, out = out)
-#verify
-sum(out)
+sum(out)  #verify
 ```
 
 ## Licensing
