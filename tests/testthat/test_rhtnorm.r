@@ -19,10 +19,11 @@ hypertruncated_mvn_data <- function() {
 
 structured_mvn_data <- function() {
     out <- hypertruncated_mvn_data()
-    k1 <- length(out$mean)
+    k1 <- out$gncol
+    k2 <- out$gnrow
     eig <- eigen(out$cov)
-    out$phi <- eig$vectors
-    out$omega <- diag(eig$values)
+    out$phi <- eig$vector[1:k2, ]
+    out$omega <- diag(eig$values[1:k2])
     out$a <- diag(runif(k1))
 
     out

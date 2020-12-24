@@ -10,20 +10,15 @@ CFLAGS := -std=c11 -fwrapv -O3 -fPIC -funroll-loops -pedantic -g -pthread \
 	-Wno-unused-result -Wpointer-arith -Wcast-qual -Wmissing-prototypes \
 	-Wno-missing-braces -Wstrict-aliasing -fstrict-aliasing -Winline
 
-# set default include directory for BLAS include files
-INCLUDE_DIR ?= /usr/include
-override INCLUDE_DIR := -I./include -I$(INCLUDE_DIR)
+INCLUDE_DIR := -I./include
 LDIR := ./lib
-# set default include directory for BLAS shared library
 LIBS_DIR ?= /usr/lib
 override LIBS_DIR := -L$(LIBS_DIR)
-LIBS ?= -lopenblas
-override LIBS += -lm
+LIBS := -lm -lblas -llapack
 
-_SRCFILES = $(wildcard src/*.c)
-SRCFILES = $(filter-out src/r_wrapper.c, $(_SRCFILES))
+SRCFILES = src/dist.c src/htnorm.c src/rng.c
 
-OBJ= $(patsubst %.c, %.o, $(SRCFILES))
+OBJ = src/dist.o src/htnorm.o src/rng.o
 
 
 %.o: %.c
@@ -35,7 +30,7 @@ lib: $(LDIR)/lib$(NAME).so
 
 $(LDIR)/lib$(NAME).so: $(OBJ)
 	mkdir -p $(LDIR)
-	$(CC) -shared -Wl,-soname=lib$(NAME) -o $@ $(LIBS_DIR) $(LIBS) $^
+	$(CC) -pthread -shared -Wl,-soname=lib$(NAME) -o $@ $(LIBS_DIR) $(LIBS) $^
 	rm $(OBJ)
 
 clean:
