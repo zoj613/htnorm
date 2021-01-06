@@ -9,7 +9,7 @@ this repo implements the following from the paper:
 
     ![hptrunc](https://latex.codecogs.com/svg.latex?%5Cmathbf%7Bx%7D%20%5Csim%20%5Cmathcal%7BN%7D_%7B%5Cmathcal%7BS%7D%7D%28%5Cmathbf%7B%5Cmu%7D%2C%20%5Cmathbf%7B%5CSigma%7D%29%3B%20%5Chspace%7B2mm%7D%20%5Cmathcal%7BS%7D%20%3D%20%5C%7B%5Cmathbf%7Bx%7D%20%3A%20%5Cmathbf%7BG%7D%5Cmathbf%7Bx%7D%20%3D%20%5Cmathbf%7Br%7D%5C%7D%2C%20%5Cmathbf%7BG%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bk_2%20%5Ctimes%20k%7D%2C%20rank%28%5Cmathbf%7BG%7D%29%20%3D%20k_2%20%3C%20k)
 
-- efficient sampling from a MVN with a stuctured precision matrix: 
+- efficient sampling from a MVN with a stuctured precision matrix that is a sum of an invertible matrix and a row rank matrix: 
 
     ![struc](https://latex.codecogs.com/svg.latex?%5Cmathbf%7Bx%7D%20%5Csim%20%5Cmathcal%7BN%7D%5C%5B%5Cmathbf%7B%5Cmu%7D%2C%20%28%5Cmathbf%7BA%7D%20&plus;%20%5Cmathbf%7B%5CPhi%7D%5ET%5Cmathbf%7B%5COmega%7D%5Cmathbf%7B%5CPhi%7D%29%5E%7B-1%7D%5C%5D%3B%20%5Chspace%7B2mm%7D%20%5Cmathbf%7B%5CPhi%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bn%20%5Ctimes%20p%7D%2C%20%5Cmathbf%7B%5COmega%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bn%20%5Ctimes%20n%7D%2C%20%5Cmathbf%7BA%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bp%20%5Ctimes%20p%7D)
 
@@ -131,6 +131,8 @@ see the docstrings via python's `help` function.
 The python API also exposes the `HTNGenerator` class as a Cython extension type
 that can be "cimported" in a cython script.
 
+A pure numpy implementation is demonstrated in this [example script][9].
+
 
 ## R API
 
@@ -186,3 +188,4 @@ see the [LICENSE][6] file.
 [6]: https://github.com/zoj613/htnorm/blob/main/LICENSE
 [7]: https://python-poetry.org/docs/pyproject/
 [8]: https://www.sciencedirect.com/science/article/abs/pii/S1877584517301600
+[9]: https://github.com/zoj613/htnorm/blob/main/examples/numpy_implementation.py

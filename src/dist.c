@@ -51,17 +51,16 @@ std_normal_rand(rng_t* rng)
             return x;
         }
     }
-} 
+}
+
 
 // sample from a multivariate-normal distribution N(mean, cov)
 int
 mvn_rand_cov(rng_t* rng, const double* mean, const double* cov, int nrow,
              bool diag, double* restrict out)
 {
-    size_t i;
-
     if (diag) {
-        for (i = nrow; i--; )
+        for (size_t i = nrow; i--; )
             out[i] = mean[i] + sqrt(cov[nrow * i + i]) * std_normal_rand(rng);
         return 0;
     }
@@ -73,14 +72,14 @@ mvn_rand_cov(rng_t* rng, const double* mean, const double* cov, int nrow,
     // do cholesky factorization.
     int info;
     static const int incx = 1;
+    static const double one = 1;
     memcpy(factor, cov, nrow * nrow * sizeof(*factor));
     POTRF(nrow, factor, nrow, info);
     if (!info) {
         std_normal_rand_fill(rng, nrow, out);
         // triangular matrix-vector product. L * z.
         TRMV(nrow, factor, nrow, out, incx);
-        for (i = nrow; i--; )
-            out[i] += mean[i];
+        AXPY(nrow, one, mean, out);
     }
 
     free(factor);
@@ -96,8 +95,7 @@ mvn_rand_prec(rng_t* rng, const double* prec, int nrow, type_t prec_type,
         case IDENTITY:
             // if precision is diagonal then use a direct way to calculate output.
             std_normal_rand_fill(rng, nrow, out->v);
-            for (size_t i = nrow; i--; )
-                out->factor[i] = 1.0;
+            memset(out->factor, 1, nrow * sizeof(*out->factor));
             return 0;
         case DIAGONAL:
             // we save the factor as the precision since it is diagonal. This
