@@ -28,7 +28,7 @@ rng_pcg64_new_seeded(uint64_t seed)
             pcg32_init(pcg->gen, &seed);
             pcg32_init(pcg->gen + 1, &seed);
             rng->base = pcg;
-            rng->next_int = pcg64_next_int;
+            rng->next_uint64 = pcg64_next_int;
             rng->next_double = pcg64_next_double;
         }
     }
@@ -53,7 +53,7 @@ rng_xrs128p_new_seeded(uint64_t seed)
             xrs->s[0] = splitmix64_next64(&seed);
             xrs->s[1] = splitmix64_next64(&seed);
             rng->base = xrs;
-            rng->next_int = xrs128p_next_int;
+            rng->next_uint64 = xrs128p_next_int;
             rng->next_double = xrs128p_next_double;
         }
     }

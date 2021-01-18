@@ -1,6 +1,6 @@
 #Copyright (c) 2020, Zolisa Bleki
 #SPDX-License-Identifier: BSD-3-Clause */
-.PHONY: clean pkg test wheels cythonize lib
+.PHONY: clean pkg test wheels cythonize lib install
 
 NAME := htnorm
 CC := gcc
@@ -56,6 +56,9 @@ test:
 
 cythonize:
 	cythonize pyhtnorm/*.pyx
+
+install: clean cythonize
+	poetry install
 
 sdist: cythonize
 	poetry build -f sdist

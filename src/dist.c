@@ -23,7 +23,7 @@ std_normal_rand(rng_t* rng)
     double x, xx, yy;
 
     for (;;) {
-        r = rng->next_int(rng->base);
+        r = rng->next_uint64(rng->base);
         idx = r & 0xff;
         r >>= 8;
         sign = r & 0x1;

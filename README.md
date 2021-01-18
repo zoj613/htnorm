@@ -77,16 +77,19 @@ int main (void)
 
 ## Python API
 
+### Dependencies
+- NumPy >= 1.17
+
 A high level python interface to the library is also provided. Linux users can 
 install it using wheels via pip (thus not needing to worry about availability of C libraries),
 ```bash
-pip install pyhtnorm
+pip install -U pyhtnorm
 ```
 Wheels are not provided for MacOS. To install via pip, one can run the following commands:
 ```bash
 #set the path to LAPACK shared library
 export LIBS_DIR=<some directory>
-pip install pyhtnorm
+pip install -U pyhtnorm
 ```
 Alternatively, one can install it from source. This requires an installation of [poetry][7] and the following shell commands:
 
@@ -99,37 +102,34 @@ $ export PYTHONPATH=$PWD:$PYTHONPATH
 ```
 
 Below is an example of how to use htnorm in python to sample from a multivariate
-gaussian truncated on the hyperplane ![sumzero](https://latex.codecogs.com/svg.latex?%5Cmathbf%7B1%7D%5ET%5Cmathbf%7Bx%7D%20%3D%200) (i.e. making sure the sampled values sum to zero)
+gaussian truncated on the hyperplane ![sumzero](https://latex.codecogs.com/svg.latex?%5Cmathbf%7B1%7D%5ET%5Cmathbf%7Bx%7D%20%3D%200) (i.e. making sure the sampled values sum to zero). The python
+API is such that the code can be easily integrated into other existing libraries.
+Since `v1.0.0`, it supports passing a `numpy.random.Generator` instance.
+Thus, one can reuse the same generator without having to declare one specifically for `htnorm`.
 
 ```python
-from pyhtnorm import HTNGenerator
+from pyhtnorm import hyperplane_truncated_mvnorm
 import numpy as np
 
-rng = HTNGenerator()
+rng = np.random.default_rng()
 
 # generate example input
-k1 = 1000
-k2 = 1
-npy_rng = np.random.default_rng()
-temp = npy_rng.random((k1, k1))
-cov = temp @ temp.T + np.diag(npy_rng.random(k1))
+k1, k2 = 1000, 1
+temp = rng.random((k1, k1))
+cov = temp @ temp.T
 G = np.ones((k2, k1))
 r = np.zeros(k2)
-mean = npy_rng.random(k1)
+mean = rng.random(k1)
 
-samples = rng.hyperplane_truncated_mvnorm(mean, cov, G, r)
-print(sum(samples))  # verify if sampled values sum to zero
+# passing `random_state` is optional. If the argument is not used, a fresh
+# random generator state is instantiated internally using system entropy.
+o = hyperplane_truncated_mvnorm(mean, cov, G, r, random_state=rng)
+print(o.sum())  # verify if sampled values sum to zero
 # alternatively one can pass an array to store the results in
-out = np.empty(k1)
-rng.hyperplane_truncated_mvnorm(mean, cov, G, r, out=out)
-print(out.sum())  # verify
+hyperplane_truncated_mvnorm(mean, cov, G, r, out=o)
 ```
 
-For more details about the parameters of the `HTNGenerator` and its methods,
-see the docstrings via python's `help` function.
-
-The python API also exposes the `HTNGenerator` class as a Cython extension type
-that can be "cimported" in a cython script.
+For more information about the function's arguments, refer to its docstring.
 
 A pure numpy implementation is demonstrated in this [example script][9].
 
@@ -183,9 +183,9 @@ see the [LICENSE][6] file.
 [1]: https://projecteuclid.org/euclid.ba/1488337478
 [2]: https://www.pcg-random.org/
 [3]: https://en.wikipedia.org/wiki/Xoroshiro128%2B
-[4]: https://github.com/zoj613/htnorm/blob/main/include/htnorm.h 
-[5]: https://github.com/zoj613/htnorm/blob/main/include/rng.h
-[6]: https://github.com/zoj613/htnorm/blob/main/LICENSE
+[4]: ./include/htnorm.h 
+[5]: ./include/rng.h
+[6]: ./LICENSE
 [7]: https://python-poetry.org/docs/pyproject/
 [8]: https://www.sciencedirect.com/science/article/abs/pii/S1877584517301600
-[9]: https://github.com/zoj613/htnorm/blob/main/examples/numpy_implementation.py
+[9]: ./examples/numpy_implementation.py
