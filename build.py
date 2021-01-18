@@ -30,7 +30,7 @@ else:
 
 extensions = [
     Extension(
-        "pyhtnorm._htnorm",
+        "_htnorm",
         source_files,
         include_dirs=[np.get_include(), './include'],
         library_dirs=library_dirs,

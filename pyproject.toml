@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyhtnorm"
-version = "0.2.0"
+version = "1.0.0"
 description = "Fast Simulation of Hyperplane-Truncated Multivatiate Normal Distributions" 
 authors = ["Zolisa Bleki"]
 license = "BSD-3-Clause"
