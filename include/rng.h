@@ -15,11 +15,11 @@
  * their own bitgenerator, The minimum requirement is to provide a function
  * that generate 64bit unsigned integers and doubles in the range (0, 1).
  */
-typedef struct bitgen {
+typedef struct {
     // the bsse bitgenerator
     void* base;
     // a function pointer that takes `base` as an input an returns a positive intgger
-    uint64_t (*next_int)(void* base);
+    uint64_t (*next_uint64)(void* base);
     // a function pointer that takes `base` as an input an returns a double in the range (0, 1)
     double (*next_double)(void* base);
 } rng_t;

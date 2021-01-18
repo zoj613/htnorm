@@ -30,13 +30,13 @@ script = "build.py"
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
+numpy = "^1.17.0"
 
 [tool.poetry.dev-dependencies]
 Cython = "^0.29.20"
-numpy = "*"
 pytest = "*"
 toml = "^0.10.2"
 
 [build-system]
-requires = ["poetry-core>=1.0.0a9", "wheel", "setuptools"]
+requires = ["poetry-core>=1.0.0a9", "wheel", "setuptools", "numpy>=1.17"]
 build-backend = "poetry.core.masonry.api"

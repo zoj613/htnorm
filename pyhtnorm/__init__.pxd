@@ -1,1 +1,1 @@
-from ._htnorm cimport HTNGenerator
+from pyhtnorm.c_htnorm cimport *
