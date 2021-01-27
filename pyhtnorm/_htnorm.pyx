@@ -135,7 +135,7 @@ def hyperplane_truncated_mvnorm(
         the algorithm could not successfully generate the samples.
 
     """
-    cdef BitGenerator bigenerator
+    cdef BitGenerator bitgenerator
     cdef rng_t rng
     cdef ht_config_t config
     cdef int info
@@ -228,8 +228,7 @@ def structured_precision_mvnorm(
         the algorithm could not successfully generate the samples.
 
     """
-    cdef BitGenerator bigenerator
-    cdef bitgen_t* bitgen
+    cdef BitGenerator bitgenerator
     cdef rng_t rng
     cdef sp_config_t config
     cdef int info
