@@ -3,17 +3,17 @@
 This repo provides a C implementation of a fast and exact sampling algorithm for a 
 multivariate normal distribution (MVN) truncated on a hyperplane as described [here][1]
 
-this repo implements the following from the paper:
+This repo implements the following from the paper:
 
-- efficient Sampling from a MVN truncated on a hyperplane: 
+- Efficient sampling from a MVN truncated on a hyperplane: 
 
     ![hptrunc](https://latex.codecogs.com/svg.latex?%5Cmathbf%7Bx%7D%20%5Csim%20%5Cmathcal%7BN%7D_%7B%5Cmathcal%7BS%7D%7D%28%5Cmathbf%7B%5Cmu%7D%2C%20%5Cmathbf%7B%5CSigma%7D%29%3B%20%5Chspace%7B2mm%7D%20%5Cmathcal%7BS%7D%20%3D%20%5C%7B%5Cmathbf%7Bx%7D%20%3A%20%5Cmathbf%7BG%7D%5Cmathbf%7Bx%7D%20%3D%20%5Cmathbf%7Br%7D%5C%7D%2C%20%5Cmathbf%7BG%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bk_2%20%5Ctimes%20k%7D%2C%20rank%28%5Cmathbf%7BG%7D%29%20%3D%20k_2%20%3C%20k)
 
-- efficient sampling from a MVN with a stuctured precision matrix that is a sum of an invertible matrix and a row rank matrix: 
+- Efficient sampling from a MVN with a stuctured precision matrix that is a sum of an invertible matrix and a low rank matrix: 
 
     ![struc](https://latex.codecogs.com/svg.latex?%5Cmathbf%7Bx%7D%20%5Csim%20%5Cmathcal%7BN%7D%5C%5B%5Cmathbf%7B%5Cmu%7D%2C%20%28%5Cmathbf%7BA%7D%20&plus;%20%5Cmathbf%7B%5CPhi%7D%5ET%5Cmathbf%7B%5COmega%7D%5Cmathbf%7B%5CPhi%7D%29%5E%7B-1%7D%5C%5D%3B%20%5Chspace%7B2mm%7D%20%5Cmathbf%7B%5CPhi%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bn%20%5Ctimes%20p%7D%2C%20%5Cmathbf%7B%5COmega%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bn%20%5Ctimes%20n%7D%2C%20%5Cmathbf%7BA%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bp%20%5Ctimes%20p%7D)
 
-- efficent sampling frfom a MVN with a structured precision and mean:
+- Efficient sampling from a MVN with a structured precision and mean:
 
     ![strucmean](https://latex.codecogs.com/svg.latex?%5Cmathbf%7Bx%7D%20%5Csim%20%5Cmathcal%7BN%7D%5CBig%5C%5B%28%5Cmathbf%7BA%7D%20&plus;%20%5Cmathbf%7B%5CPhi%7D%5ET%5Cmathbf%7B%5COmega%7D%5Cmathbf%7B%5CPhi%7D%29%5E%7B-1%7D%5Cmathbf%7B%5CPhi%7D%5ET%5Cmathbf%7B%5COmega%7D%5Cmathbf%7Bt%7D%2C%20%28%5Cmathbf%7BA%7D%20&plus;%20%5Cmathbf%7B%5CPhi%7D%5ET%5Cmathbf%7B%5COmega%7D%5Cmathbf%7B%5CPhi%7D%29%5E%7B-1%7D%5CBig%5C%5D%3B%20%5Chspace%7B2mm%7D%20%5Cmathbf%7B%5COmega%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bn%20%5Ctimes%20n%7D%2C%20%5Cmathbf%7BA%7D%20%5Cin%20%5Cmathcal%7BR%7D%5E%7Bp%20%5Ctimes%20p%7D)
 
@@ -21,8 +21,8 @@ The algorithms implemented have the following practical applications:
 - Topic models when unknown parameters can be interpreted as fractions.
 - Admixture models
 - discrete graphical models
-- Sampling from posterior distribution of an Intrinsic Conditional Autoregressive prior [icar][8]
-- Sampling from posterior conditional distributions of various bayesian regression problems.
+- Sampling from the posterior distribution of an Intrinsic Conditional Autoregressive prior [icar][8]
+- Sampling from the posterior conditional distributions of various bayesian regression problems.
 
 
 ## Dependencies
@@ -41,7 +41,7 @@ $ make lib
 Afterwards the shared library will be found in a `lib/` directory of the project root,
 and the library can be linked dynamically via `-lhtnorm`.
 
-The puplic API exposes the samplers through the function declarations
+The puplic interface exposes the samplers through the function declarations
 ```C
  int htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out);
  int htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* out);
@@ -50,10 +50,10 @@ The puplic API exposes the samplers through the function declarations
 The details of the parameters are documented in ther header files ["htnorm.h"][4].
 
 Random number generation is done using [PCG64][2] or [Xoroshiro128plus][3] bitgenerators. 
-The API allows using a custom generator, and the details are documented in the header file 
+The interface allows using a custom bitgenerator, and the details are documented in the header file 
 ["rng.h"][5].
 
-## Examples
+## Example
 ```C
 #include "htnorm.h"
 
@@ -75,7 +75,9 @@ int main (void)
 }
 ```
 
-## Python API
+## Python Interface
+[![PyPI - Wheel][10]](https://pypi.org/project/pyhtnorm/#files)
+[![PyPI][11]](https://pypi.org/project/pyhtnorm/)
 
 ### Dependencies
 - NumPy >= 1.17
@@ -103,9 +105,8 @@ $ export PYTHONPATH=$PWD:$PYTHONPATH
 
 Below is an example of how to use htnorm in python to sample from a multivariate
 gaussian truncated on the hyperplane ![sumzero](https://latex.codecogs.com/svg.latex?%5Cmathbf%7B1%7D%5ET%5Cmathbf%7Bx%7D%20%3D%200) (i.e. making sure the sampled values sum to zero). The python
-API is such that the code can be easily integrated into other existing libraries.
-Since `v1.0.0`, it supports passing a `numpy.random.Generator` instance.
-Thus, one can reuse the same generator without having to declare one specifically for `htnorm`.
+interface is such that the code can be easily integrated into other existing libraries.
+Since `v1.0.0`, it supports passing a `numpy.random.Generator` instance as a parameter to aid reproducibility.
 
 ```python
 from pyhtnorm import hyperplane_truncated_mvnorm
@@ -134,14 +135,14 @@ For more information about the function's arguments, refer to its docstring.
 A pure numpy implementation is demonstrated in this [example script][9].
 
 
-## R API
+## R Interface
 
-One can also access the API in R. To install the package, use one the following 
-commands:
+One can also use the package in R. To install, use one the following commands:
 ```R
 devtools::install_github("zoj613/htnorm")
 pak::pkg_install("zoj613/htnorm")
 ```
+
 Below is an R translation of the above python example:
 
 ```R
@@ -153,13 +154,15 @@ cov <- matrix(rnorm(1000 * 1000), ncol=1000)
 cov <- cov %*% t(cov)
 G <- matrix(rep(1, 1000), ncol=1000)
 r <- c(0)
+
 # initialize the Generator instance
 rng <- HTNGenerator(seed=12345, gen="pcg64")
+
 samples <- rng$hyperplane_truncated_mvnorm(mean, cov, G, r)
 #verify if sampled values sum to zero
 sum(samples)
 
-# alternatively one can pass a vector to store the results in
+# optionally pass a vector to store the results in
 out <- rep(0, 1000)
 rng$hyperplane_truncated_mvnorm(mean, cov, G, r, out = out)
 sum(out)  #verify
@@ -187,5 +190,7 @@ see the [LICENSE][6] file.
 [5]: ./include/rng.h
 [6]: ./LICENSE
 [7]: https://python-poetry.org/docs/pyproject/
-[8]: https://www.sciencedirect.com/science/article/abs/pii/S1877584517301600
+[8]: https://www.sciencedirect.com/science/article/abs/pii/S2211675317301574 
 [9]: ./examples/numpy_implementation.py
+[10]: https://img.shields.io/pypi/wheel/pyhtnorm?style=flat-square
+[11]: https://img.shields.io/pypi/v/pyhtnorm?style=flat-square
