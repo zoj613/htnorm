@@ -1,7 +1,7 @@
 # Copyright (c) 2020, Zolisa Bleki
 # SPDX-License-Identifier: BSD-3-Clause
 
-matrix_type <- c(0, 1, 2)
+matrix_type <- c("regular", "diagonal", "identity")
 
 
 validate_output <- function(res) {
@@ -60,10 +60,20 @@ strprec_mvn <- function(rng, mean, a, phi, omega, str_mean, a_id, o_id, out) {
     )
 
     if (!is.element(a_id, matrix_type) || !is.element(o_id, matrix_type))
-        stop("`a_type` and `o_type` need to be one of {0, 1, 2}")
+        stop("`a_type` and `o_type` need to be one of {'regular', 'diagonal', 'identity'}")
 
-    a_id <- as.integer(a_id)
-    o_id <- as.integer(o_id)
+    a_id <- switch(
+        a_id,
+        "regular" = as.integer(0),
+        "diagonal" = as.integer(1),
+        "identity" = as.integer(2)
+    )
+    o_id <- switch(
+        o_id,
+        "regular" = as.integer(0),
+        "diagonal" = as.integer(1),
+        "identity" = as.integer(2)
+    )
 
     if (is.null(out))
         out <- rep(0, length(mean))
@@ -118,7 +128,7 @@ strprec_mvn <- function(rng, mean, a, phi, omega, str_mean, a_id, o_id, out) {
 #' phi <- eig$vectors
 #' omega <- diag(eig$values)
 #' a <- diag(runif(length(mean)))
-#' rng$structured_precision_mvnorm(mean, a, phi, omega, a_type = 1, out = out)
+#' rng$structured_precision_mvnorm(mean, a, phi, omega, a_type = "diagonal", out = out)
 HTNGenerator <- function(seed = NULL, gen = "xrs128p") {
 
     if (is.numeric(seed)) {
@@ -151,7 +161,7 @@ HTNGenerator <- function(seed = NULL, gen = "xrs128p") {
     }
 
     res$structured_precision_mvnorm <- function(
-        mean, a, phi, omega, str_mean = FALSE, a_type = 0, o_type = 0, out= NULL
+        mean, a, phi, omega, str_mean = FALSE, a_type = "regular", o_type = "regular", out= NULL
     ) {
         if (is.null(out)) {
             strprec_mvn(

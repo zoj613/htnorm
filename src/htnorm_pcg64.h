@@ -4,8 +4,8 @@
 #ifndef HTNORM_PCG64_H
 #define HTNORM_PCG64_H
 
-#include "pcg32_minimal.h"
-#include "splitmax64.h"
+#include "htnorm_pcg32_minimal.h"
+#include "htnorm_splitmix64.h"
 
 typedef struct {pcg32_random_t gen[2];} pcg64_random_t;
 

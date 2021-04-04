@@ -109,7 +109,7 @@ interface is such that the code can be easily integrated into other existing lib
 Since `v1.0.0`, it supports passing a `numpy.random.Generator` instance as a parameter to aid reproducibility.
 
 ```python
-from pyhtnorm import hyperplane_truncated_mvnorm
+from pyhtnorm import hyperplane_truncated_mvnorm, structured_precision_mvnorm
 import numpy as np
 
 rng = np.random.default_rng()
@@ -166,6 +166,13 @@ sum(samples)
 out <- rep(0, 1000)
 rng$hyperplane_truncated_mvnorm(mean, cov, G, r, out = out)
 sum(out)  #verify
+
+out <- rep(0, 1000)
+eig <- eigen(cov)
+phi <- eig$vectors
+omega <- diag(eig$values)
+a <- diag(runif(length(mean)))
+rng$structured_precision_mvnorm(mean, a, phi, omega, a_type = "diagonal", out = out)
 ```
 
 ## Licensing
@@ -187,7 +194,7 @@ see the [LICENSE][6] file.
 [2]: https://www.pcg-random.org/
 [3]: https://en.wikipedia.org/wiki/Xoroshiro128%2B
 [4]: ./include/htnorm.h 
-[5]: ./include/rng.h
+[5]: ./include/htnorm_rng.h
 [6]: ./LICENSE
 [7]: https://python-poetry.org/docs/pyproject/
 [8]: https://www.sciencedirect.com/science/article/abs/pii/S2211675317301574 

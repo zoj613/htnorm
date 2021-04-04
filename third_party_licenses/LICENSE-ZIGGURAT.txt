@@ -1,3 +1,8 @@
+The ziggurat constants at src/htnorm_ziggurat_constants.h and well as the
+standard normal distribution random number generator implementation where
+obtained from the numpy package.
+
+
 Copyright (c) 2005-2017, NumPy Developers.
 All rights reserved.
 

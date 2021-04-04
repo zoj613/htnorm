@@ -1,3 +1,7 @@
+The code for the PCG32 bitgenerator at src/htnorm_pcg32_minimal.h was obtained
+from M. E. O'Neill's pcg-random package. Website of original code: pcg-random.org
+ 
+
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/

@@ -6,8 +6,8 @@ import numpy as np
 
 source_files = [
     "pyhtnorm/_htnorm.c",
-    "src/rng.c",
-    "src/dist.c",
+    "src/htnorm_rng.c",
+    "src/htnorm_distributions.c",
     "src/htnorm.c"
 ]
 
@@ -32,7 +32,7 @@ extensions = [
     Extension(
         "_htnorm",
         source_files,
-        include_dirs=[np.get_include(), './include'],
+        include_dirs=[np.get_include(), './include', 'src'],
         library_dirs=library_dirs,
         libraries=libraries,
         define_macros=[('NPY_NO_DEPRECATED_API', 0)],

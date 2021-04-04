@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#include "always_inline.h"
+#include "htnorm_always_inline.h"
 
 typedef struct pcg32_rand {
     uint64_t state;

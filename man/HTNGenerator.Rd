@@ -41,7 +41,7 @@ eig <- eigen(cov)
 phi <- eig$vectors
 omega <- diag(eig$values)
 a <- diag(runif(length(mean)))
-rng$structured_precision_mvnorm(mean, a, phi, omega, a_type = 1, out = out)
+rng$structured_precision_mvnorm(mean, a, phi, omega, a_type = "diagonal", out = out)
 }
 \references{
 Cong, Yulai; Chen, Bo; Zhou, Mingyuan. Fast Simulation of 
