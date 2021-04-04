@@ -16,9 +16,9 @@ LIBS_DIR ?= /usr/lib
 override LIBS_DIR := -L$(LIBS_DIR)
 LIBS := -lm -lblas -llapack
 
-SRCFILES = src/dist.c src/htnorm.c src/rng.c
+SRCFILES = src/htnorm_distributions.c src/htnorm.c src/htnorm_rng.c
 
-OBJ = src/dist.o src/htnorm.o src/rng.o
+OBJ = src/htnorm_distributions.o src/htnorm.o src/htnorm_rng.o
 
 
 %.o: %.c

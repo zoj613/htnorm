@@ -4,10 +4,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "pcg64.h"
-#include "xoroshiro128p.h"
-
-#include "../include/rng.h"
+#include "htnorm_pcg64.h"
+#include "htnorm_xoroshiro128p.h"
+#include "../include/htnorm_rng.h"
 
 
 ALWAYS_INLINE(void)

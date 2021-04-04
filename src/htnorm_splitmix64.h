@@ -11,7 +11,7 @@ See <http://creativecommons.org/publicdomain/zero/1.0/>. */
 
 #include <stdint.h>
 
-#include "always_inline.h"
+#include "htnorm_always_inline.h"
 
 // generate a postive integer using the splitmix64 bit generator
 static ALWAYS_INLINE(uint64_t)

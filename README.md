@@ -194,7 +194,7 @@ see the [LICENSE][6] file.
 [2]: https://www.pcg-random.org/
 [3]: https://en.wikipedia.org/wiki/Xoroshiro128%2B
 [4]: ./include/htnorm.h 
-[5]: ./include/rng.h
+[5]: ./include/htnorm_rng.h
 [6]: ./LICENSE
 [7]: https://python-poetry.org/docs/pyproject/
 [8]: https://www.sciencedirect.com/science/article/abs/pii/S2211675317301574 

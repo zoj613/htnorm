@@ -9,12 +9,11 @@
 #ifndef HTNORM_DIST_H
 #define HTNORM_DIST_H
 
-#include <stdbool.h>
 #include <stdlib.h>
 
-#include "../include/rng.h"
+#include "../include/htnorm_rng.h"
 #include "../include/htnorm.h"
-#include "always_inline.h"
+#include "htnorm_always_inline.h"
 
 // error number for failed memory allocation throughout the library
 #define HTNORM_ALLOC_ERROR -100

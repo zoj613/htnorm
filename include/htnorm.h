@@ -28,7 +28,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "rng.h"
+#include "htnorm_rng.h"
 
 
 typedef enum {NORMAL, DIAGONAL, IDENTITY} type_t;

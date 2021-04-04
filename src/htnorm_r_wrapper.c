@@ -4,7 +4,7 @@
 #include <R.h>
 #include <Rinternals.h>
 
-#include "../include/htnorm.h"
+#include "htnorm.h"
 
 enum RNG_TYPE {Xoroshiro128p, PCG64}; 
 

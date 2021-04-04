@@ -5,9 +5,9 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "blas.h"
-#include "dist.h"
-#include "zig_constants.h"
+#include "htnorm_blas.h"
+#include "htnorm_distributions.h"
+#include "htnorm_ziggurat_constants.h"
 
 #define std_normal_rand_fill(rng, arr_size, arr) \
     for (int ii = (arr_size); ii--;) (arr)[ii] = std_normal_rand((rng))
@@ -69,16 +69,17 @@ mvn_rand_cov(rng_t* rng, const double* mean, const double* cov, int nrow,
     if (factor == NULL)
         return HTNORM_ALLOC_ERROR;
 
-    // do cholesky factorization.
     int info;
     static const int incx = 1;
     static const double one = 1;
     memcpy(factor, cov, nrow * nrow * sizeof(*factor));
+    // do cholesky factorization.
     POTRF(nrow, factor, nrow, info);
     if (!info) {
         std_normal_rand_fill(rng, nrow, out);
         // triangular matrix-vector product. L * z.
         TRMV(nrow, factor, nrow, out, incx);
+        // mean + L * z
         AXPY(nrow, one, mean, out);
     }
 

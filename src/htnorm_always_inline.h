@@ -1,3 +1,10 @@
+/* Copyright (c) 2020, Zolisa Bleki
+ *
+ * SPDX-License-Identifier: BSD-3-Clause 
+ *
+ * This file is derived from an example in the documentation of clang.
+ */
+#pragma once
 #ifndef HTNORM_ALWAYS_INLINE_H
 #define HTNORM_ALWAYS_INLINE_H
 

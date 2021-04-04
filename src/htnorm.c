@@ -8,14 +8,13 @@
  * macro for several lines per function because matrix manipulation with BLAS
  * / LAPACK in C heavily depends on the memory layout of the input.
  * */
-#include <stddef.h>
 #include <string.h>
 
-#include "blas.h"
-#include "dist.h"
+#include "htnorm_blas.h"
+#include "htnorm_distributions.h"
 
 
-inline void
+ALWAYS_INLINE(void)
 init_ht_config(ht_config_t* conf, size_t gnrow, size_t gncol, const double* mean,
                const double* cov, const double* g, const double* r, bool diag)
 {
@@ -29,7 +28,7 @@ init_ht_config(ht_config_t* conf, size_t gnrow, size_t gncol, const double* mean
 }
 
 
-inline void
+ALWAYS_INLINE(void)
 init_sp_config(sp_config_t* conf, size_t pnrow, size_t pncol, const double* mean,
                const double* a, const double* phi, const double* omega,
                bool struct_mean, type_t a_id, type_t o_id)

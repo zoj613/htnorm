@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-#include "always_inline.h"
+#include "htnorm_always_inline.h"
 
 typedef struct {uint64_t s[2];} xrs128p_random_t;
 

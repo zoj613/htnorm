@@ -44,18 +44,18 @@ from numpy.random import default_rng
 
 np.import_array()
 
-cdef extern from "../src/dist.h":
+cdef extern from "htnorm_distributions.h":
     int HTNORM_ALLOC_ERROR
 
 
-cdef extern from "../include/rng.h" nogil:
+cdef extern from "htnorm_rng.h" nogil:
     ctypedef struct rng_t:
         void* base
         uint64_t (*next_uint64)(void* state)
         double (*next_double)(void* state)
 
 
-cdef extern from "../include/htnorm.h" nogil:
+cdef extern from "htnorm.h" nogil:
     ctypedef enum mat_type "type_t":
         NORMAL
         DIAGONAL
