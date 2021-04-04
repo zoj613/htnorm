@@ -109,7 +109,7 @@ interface is such that the code can be easily integrated into other existing lib
 Since `v1.0.0`, it supports passing a `numpy.random.Generator` instance as a parameter to aid reproducibility.
 
 ```python
-from pyhtnorm import hyperplane_truncated_mvnorm
+from pyhtnorm import hyperplane_truncated_mvnorm, structured_precision_mvnorm
 import numpy as np
 
 rng = np.random.default_rng()

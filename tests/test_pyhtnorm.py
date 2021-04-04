@@ -82,7 +82,7 @@ def test_structured_mvn(structured_mvn_data):
         structured_precision_mvnorm(mean, a2, phi, omega2)
     # raise error if invalid matrix structure is specified
     with pytest.raises(ValueError):
-        structured_precision_mvnorm(mean, a, phi, omega, a_type=-1000)
+        structured_precision_mvnorm(mean, a, phi, omega, a_type="wrong type")
     # rest for non-numerical values
     a2 = a.copy()
     a2[0] = np.nan
@@ -94,7 +94,7 @@ def test_structured_mvn(structured_mvn_data):
     arr1 = structured_precision_mvnorm(mean, a, phi, omega, random_state=rng)
     rng = np.random.default_rng(10)
     arr2 = structured_precision_mvnorm(
-        mean, a, phi, omega, o_type=1, a_type=1, random_state=rng
+        mean, a, phi, omega, o_type="diagonal", a_type="diagonal", random_state=rng
     )
     assert np.allclose(arr1, arr2)
     # test results of passing output array through the `out` parameter

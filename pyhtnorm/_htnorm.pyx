@@ -34,12 +34,12 @@ References
 
 """
 from cpython.pycapsule cimport PyCapsule_GetPointer
+from libc.stdint cimport uint64_t
 
-import numpy as np
 cimport numpy as np
 from numpy.random cimport BitGenerator, bitgen_t
 
-from pyhtnorm.c_htnorm cimport *
+from numpy.random import default_rng
 
 
 np.import_array()
@@ -48,7 +48,54 @@ cdef extern from "../src/dist.h":
     int HTNORM_ALLOC_ERROR
 
 
-cdef inline void validate_return_info(info):
+cdef extern from "../include/rng.h" nogil:
+    ctypedef struct rng_t:
+        void* base
+        uint64_t (*next_uint64)(void* state)
+        double (*next_double)(void* state)
+
+
+cdef extern from "../include/htnorm.h" nogil:
+    ctypedef enum mat_type "type_t":
+        NORMAL
+        DIAGONAL
+        IDENTITY
+
+    ctypedef struct ht_config_t:
+        size_t gnrow
+        size_t gncol
+        const double* mean
+        const double* cov
+        const double* g
+        const double* r
+        bint diag
+
+    ctypedef struct sp_config_t:
+        mat_type a_id
+        mat_type o_id
+        size_t pnrow
+        size_t pncol
+        const double* mean
+        const double* a
+        const double* phi
+        const double* omega
+        bint struct_mean
+
+    void init_ht_config(ht_config_t* conf, size_t gnrow, size_t gncol,
+                        const double* mean, const double* cov, const double* g,
+                        const double* r, bint diag)
+
+    void init_sp_config(sp_config_t* conf, size_t pnrow, size_t pncol,
+                        const double* mean, const double* a, const double* phi,
+                        const double* omega, bint struct_mean, mat_type a_id,
+                        mat_type o_id)
+
+    int htn_hyperplane_truncated_mvn(rng_t* rng, const ht_config_t* conf, double* out)
+
+    int htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* out)
+
+
+cdef inline void validate_return_info(int info):
     if info == HTNORM_ALLOC_ERROR:
         raise MemoryError("Not enough memory to allocate resources.")
     elif info < 0:
@@ -62,13 +109,14 @@ cdef inline void validate_return_info(info):
         )
 
 
-cdef set _VALID_MATRIX_TYPES = {NORMAL, DIAGONAL, IDENTITY}
+cdef dict MAT_TYPE = {"regular": NORMAL, "diagonal": DIAGONAL, "identity": IDENTITY}
+cdef const char* BITGEN_NAME = "BitGenerator"
 
 
-cdef inline void initialize_rng(BitGenerator bitgenerator, rng_t* htnorm_rng):
+cdef inline void initialize_rng(object bitgenerator, rng_t* htnorm_rng):
     cdef bitgen_t* bitgen
 
-    bitgen = <bitgen_t*>PyCapsule_GetPointer(bitgenerator.capsule, "BitGenerator")
+    bitgen = <bitgen_t*>PyCapsule_GetPointer(bitgenerator.capsule, BITGEN_NAME)
     htnorm_rng.base = bitgen.state
     htnorm_rng.next_uint64 = bitgen.next_uint64
     htnorm_rng.next_double = bitgen.next_double
@@ -135,7 +183,6 @@ def hyperplane_truncated_mvnorm(
         the algorithm could not successfully generate the samples.
 
     """
-    cdef BitGenerator bitgenerator
     cdef rng_t rng
     cdef ht_config_t config
     cdef int info
@@ -152,7 +199,7 @@ def hyperplane_truncated_mvnorm(
     init_ht_config(&config, g.shape[0], g.shape[1], &mean[0],
                    &cov[0, 0], &g[0, 0], &r[0], diag)
 
-    bitgenerator = np.random.default_rng(random_state)._bit_generator
+    bitgenerator = default_rng(random_state)._bit_generator
     initialize_rng(bitgenerator, &rng)
 
     with bitgenerator.lock, nogil:
@@ -169,14 +216,15 @@ def structured_precision_mvnorm(
     double[:,::1] phi,
     double[:,::1] omega,
     bint mean_structured=False,
-    int a_type=0,
-    int o_type=0,
+    str a_type="regular",
+    str o_type="regular",
     double[:] out=None,
     random_state=None
 ):
     """
     structured_precision_mvnorm(mean, a, phi, omega, mean_structured=False,
-                                a_type=0, o_type=0, out=None, random_state=None)
+                                a_type="regular", o_type="regular",
+                                out=None, random_state=None)
 
     Sample from a MVN with a structured precision matrix :math:`\Lambda`
     .. math::
@@ -197,9 +245,9 @@ def structured_precision_mvnorm(
         such than ``mean = (precision)^-1 * phi^T * omega * t``. If this
         is set to True, then the `mean` parameter is assumed to contain the
         array ``t``.
-    a_type : {0, 1, 2}, optional, default=0
+    a_type : {"regular", "diagonal", "identity"}, optional, default="regular"
         Whether `a` ia a normal, diagonal or identity matrix.
-    o_type : {0, 1, 2}, optional, default=0
+    o_type : {"regular", "diagonal", "identity"}, optional, default="regular"
         Whether `omega` ia a normal, diagonal or identity matrix.
     out : 1d array, optional, default=None
         An array of the same shape as `mean` to store the samples. If not
@@ -228,7 +276,6 @@ def structured_precision_mvnorm(
         the algorithm could not successfully generate the samples.
 
     """
-    cdef BitGenerator bitgenerator
     cdef rng_t rng
     cdef sp_config_t config
     cdef int info
@@ -238,8 +285,8 @@ def structured_precision_mvnorm(
         raise ValueError('`omega` and `a` both need to be square matrices')
     elif (phi.shape[0] != omega.shape[0]) or (phi.shape[1] != a.shape[0]):
         raise ValueError('Shapes of `phi`, `omega` and `a` are not consistent')
-    elif not {a_type, o_type}.issubset(_VALID_MATRIX_TYPES):
-        raise ValueError(f"`a_type` & `o_type` must be one of {_VALID_MATRIX_TYPES}")
+    elif not {a_type, o_type}.issubset(MAT_TYPE):
+        raise ValueError(f"`a_type` & `o_type` must be one of {set(MAT_TYPE)}")
     elif has_out and out.shape[0] != mean.shape[0]:
         raise ValueError("`out` must have the same size as the mean array.")
     elif not has_out:
@@ -248,9 +295,9 @@ def structured_precision_mvnorm(
 
     init_sp_config(&config, phi.shape[0], phi.shape[1], &mean[0], &a[0, 0],
                    &phi[0, 0], &omega[0, 0], mean_structured,
-                   <mat_type>a_type, <mat_type>o_type)
+                   MAT_TYPE[a_type], MAT_TYPE[o_type])
 
-    bitgenerator = np.random.default_rng(random_state)._bit_generator
+    bitgenerator = default_rng(random_state)._bit_generator
     initialize_rng(bitgenerator, &rng)
 
     with bitgenerator.lock, nogil:
