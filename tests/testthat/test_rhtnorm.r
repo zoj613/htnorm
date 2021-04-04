@@ -86,7 +86,7 @@ test_that("structured precision normal", {
     # test consistency of output when `a_type` or `o_type` is given
     gen1 <- HTNGenerator(10)$structured_precision_mvnorm(mean, a, phi, omega)
     gen2 <- HTNGenerator(10)$structured_precision_mvnorm(
-        mean, a, phi, omega, a_type = 1, o_type = 1
+        mean, a, phi, omega, a_type = "diagonal", o_type = "diagonal"
     )
     expect_equal(gen1, gen2)
     # test results of passing output array through the `out` parameter

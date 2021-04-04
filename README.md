@@ -166,6 +166,13 @@ sum(samples)
 out <- rep(0, 1000)
 rng$hyperplane_truncated_mvnorm(mean, cov, G, r, out = out)
 sum(out)  #verify
+
+out <- rep(0, 1000)
+eig <- eigen(cov)
+phi <- eig$vectors
+omega <- diag(eig$values)
+a <- diag(runif(length(mean)))
+rng$structured_precision_mvnorm(mean, a, phi, omega, a_type = "diagonal", out = out)
 ```
 
 ## Licensing
