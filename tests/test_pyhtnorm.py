@@ -62,6 +62,10 @@ def test_hypertruncated_mvn(hypertruncated_mvn_data):
     r = np.zeros(1)
     hyperplane_truncated_mvnorm(mean, cov, G, r, out=arr1)
     assert np.allclose(sum(arr1), 0)
+    # test output validation raises exception when passed incorrect covariance
+    with pytest.raises(ValueError, match="Either the leading minor of the"):
+        not_pd_cov = np.zeros_like(cov)
+        hyperplane_truncated_mvnorm(mean, not_pd_cov, G, r)
 
 
 def test_structured_mvn(structured_mvn_data):
