@@ -80,7 +80,7 @@ int main (void)
 [![PyPI][11]](https://pypi.org/project/pyhtnorm/)
 
 ### Dependencies
-- NumPy >= 1.17
+- NumPy >= 1.18.0
 
 A high level python interface to the library is also provided. Linux users can 
 install it using wheels via pip (thus not needing to worry about availability of C libraries),
@@ -98,7 +98,8 @@ Alternatively, one can install it from source. This requires an installation of 
 ```bash
 $ git clone https://github.com/zoj613/htnorm.git
 $ cd htnorm/
-$ poetry install
+$ poetry install --no-root
+$ make install
 # add htnorm to python's path
 $ export PYTHONPATH=$PWD:$PYTHONPATH
 ```
