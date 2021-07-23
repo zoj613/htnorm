@@ -95,7 +95,7 @@ cdef extern from "htnorm.h" nogil:
     int htn_structured_precision_mvn(rng_t* rng, const sp_config_t* conf, double* out)
 
 
-cdef inline void validate_return_info(int info):
+cdef inline int validate_return_info(int info) except? -1:
     if info == HTNORM_ALLOC_ERROR:
         raise MemoryError("Not enough memory to allocate resources.")
     elif info < 0:

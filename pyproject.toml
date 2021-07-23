@@ -28,10 +28,11 @@ script = "build.py"
 
 [tool.poetry.dependencies]
 python = "^3.7.0"
-numpy = "^1.18.1"
+numpy = "^1.18.0"
 
 [tool.poetry.dev-dependencies]
 Cython = "^0.29.20"
+numpy = "1.18.0"
 pytest = "*"
 toml = "^0.10.2"
 
