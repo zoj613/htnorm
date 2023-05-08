@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04 ]
+        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
+
+    name: Python version - ${{ matrix.python-version }} - ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Ensure openblas and lapack are installed on Linux
+        if: matrix.os == 'ubuntu-20.04'
+        run: sudo apt-get install libopenblas-dev liblapack-dev
+
+      - name: Install Dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run Pytest, report coverage
+        env:
+          BUILD_WITH_COVERAGE: true
+        run: |
+          cythonize pyhtnorm/*.pyx -X linetrace=True
+          pip install -e .
+          pytest -v --cov-branch --cov=pyhtnorm tests/ --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
