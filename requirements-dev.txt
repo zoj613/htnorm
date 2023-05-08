@@ -1,0 +1,6 @@
+-e .
+build==0.10.0
+cython==0.29.30
+numpy==1.23.2
+pytest==7.1.2
+pytest-cov==3.0.0

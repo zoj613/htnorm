@@ -1,11 +1,26 @@
-[tool.poetry]
+[build-system]
+requires = [
+    "wheel",
+    "cython==0.29.30",
+    "setuptools>=61.0.0",
+    "setuptools-scm[toml]>=6.2",
+    "numpy==1.23.2; python_version>='3.11'",
+    "numpy==1.21.3; python_version<='3.10'",
+]
+build-backend = "setuptools.build_meta"
+
+
+[project]
 name = "pyhtnorm"
-version = "2.0.0"
+authors = [
+    {name = "Zolisa Bleki", email = "zolisa.bleki@gmail.com"}
+]
 description = "Fast Simulation of Hyperplane-Truncated Multivatiate Normal Distributions" 
-authors = ["Zolisa Bleki"]
-license = "BSD-3-Clause"
-readme = 'README.md'
-repository = "https://github.com/zoj613/htnorm/"
+readme = "README.md"
+dynamic = ["version"]
+license = {text = "BSD 3-Clause License"}
+requires-python = ">=3.8"
+dependencies = ["numpy >= 1.18.0"]
 keywords = [
     'statistical sampling',
     'multivariate gaussian distribution',
@@ -14,28 +29,35 @@ keywords = [
     'sampling distribution',
     'posterior sampling'
 ]
-packages = [{include = "pyhtnorm/*.py"}]
-include = [
-    {path = "pyhtnorm/*.c", format = "sdist"},
-    {path = "include", format = "sdist"},
-    {path = "src/*.c", format = "sdist"},
-    {path = "src/*.h", format = "sdist"},
-    {path = "third_party_licenses"},
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: C",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: MacOS :: MacOS X",
+    "Typing :: Typed",
 ]
 
-[tool.poetry.build]
-script = "build.py"
+[project.urls]
+source = "https://github.com/zoj613/htnorm"
+tracker = "https://github.com/zoj613/htnorm/issues"
 
-[tool.poetry.dependencies]
-python = "^3.7.0"
-numpy = "^1.18.0"
 
-[tool.poetry.dev-dependencies]
-Cython = "^0.29.20"
-numpy = "1.18.0"
-pytest = "*"
-toml = "^0.10.2"
+[tool.setuptools]
+packages = ["pyhtnorm"]
 
-[build-system]
-requires = ["poetry-core>=1.0.0a9", "wheel", "setuptools", "numpy==1.18.1"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools.exclude-package-data]
+pyhtnorm = ["*.pyx"]
+
+[tool.setuptools.data-files]
+third_party_licenses = ["third_party_licenses/*"]  # must add this here so it can be included in the wheel distribution.
+
+[tool.setuptools_scm]
+write_to = "pyhtnorm/_version.py"
+
+[tool.coverage.run]
+plugins = ["Cython.Coverage"]

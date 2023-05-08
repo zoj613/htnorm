@@ -1,0 +1,7 @@
+exclude *.sh DESCRIPTION Makefile NAMESPACE .git* src/Makevars .Rbuildignore
+prune examples
+prune R
+prune man
+prune tests   
+prune .github
+
