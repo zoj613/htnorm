@@ -8,27 +8,38 @@ on:
 
   workflow_dispatch:
 
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+
 jobs:
   build-and-test:
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-20.04, macOS-11 ]
         python-version: [ '3.8', '3.9', '3.10', '3.11' ]
 
     name: Python version - ${{ matrix.python-version }} - ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Install Conda environment with Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Ensure openblas and lapack are installed on Linux
-        if: matrix.os == 'ubuntu-20.04'
-        run: sudo apt-get install libopenblas-dev liblapack-dev
+          condarc: |
+            channels:
+              - conda-forge
+          environment-name: pyhtnorm-dev
+          cache-environment: true
+          init-shell: bash
+          create-args: >-
+            python=${{ matrix.python-version }}
+            openblas
+            lapack
 
       - name: Install Dependencies
         run: |

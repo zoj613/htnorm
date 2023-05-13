@@ -1,4 +1,4 @@
-exclude *.sh DESCRIPTION Makefile NAMESPACE .git* src/Makevars .Rbuildignore
+exclude *.sh DESCRIPTION Makefile NAMESPACE .git* src/Makevars .Rbuildignore *.yml *.yaml *.txt
 prune examples
 prune R
 prune man
