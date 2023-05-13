@@ -78,30 +78,31 @@ int main (void)
 ## Python Interface
 [![PyPI - Wheel][10]](https://pypi.org/project/pyhtnorm/#files)
 [![PyPI][11]](https://pypi.org/project/pyhtnorm/)
+[![CI][12]](https://github.com/zoj613/htnorm/actions/workflows/build-and-test.yml)
+[![Codecov][13]](https://codecov.io/gh/zoj613/htnorm/)
+[![PyPI - License][14]](https://github.com/zoj613/htnorm/blob/main/LICENSE)
+
 
 ### Dependencies
-- NumPy >= 1.18.0
+- NumPy >= 1.19.0
 
-A high level python interface to the library is also provided. Linux users can 
-install it using wheels via pip (thus not needing to worry about availability of C libraries),
+A high level python interface to the library is also provided. Linux and MacOS users can 
+install it using wheels via pip (thus not needing to worry about availability of C libraries).
+Windows OS is currently not supported.
 ```bash
 pip install -U pyhtnorm
 ```
 Wheels are not provided for MacOS. To install via pip, one can run the following commands:
 ```bash
-#set the path to LAPACK shared library
-export LIBS_DIR=<some directory>
 pip install -U pyhtnorm
 ```
-Alternatively, one can install it from source. This requires an installation of [poetry][7] and the following shell commands:
+Alternatively, one can install it from source using the following shell commands:
 
 ```bash
 $ git clone https://github.com/zoj613/htnorm.git
 $ cd htnorm/
-$ poetry install --no-root
-$ make install
-# add htnorm to python's path
-$ export PYTHONPATH=$PWD:$PYTHONPATH
+$ export PYHT_LIBS_DIR=<some directory with blas and lapack shared library files> # this is optional
+$ pip install .
 ```
 
 Below is an example of how to use htnorm in python to sample from a multivariate
@@ -202,3 +203,6 @@ see the [LICENSE][6] file.
 [9]: ./examples/numpy_implementation.py
 [10]: https://img.shields.io/pypi/wheel/pyhtnorm?style=flat-square
 [11]: https://img.shields.io/pypi/v/pyhtnorm?style=flat-square
+[12]: https://img.shields.io/github/workflow/status/zoj613/htnorm/CI/main?style=flat-square
+[13]: https://img.shields.io/codecov/c/github/zoj613/htnorm?style=flat-square
+[14]: https://img.shields.io/pypi/l/pyhtnorm?style=flat-square

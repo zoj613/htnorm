@@ -26,10 +26,24 @@ else:
 # https://numpy.org/devdocs/reference/random/examples/cython/setup.py.html
 include_path = np.get_include()
 lib_dirs = [
-    '/usr/lib',
-    join(include_path, '..', '..', 'random', 'lib'),
-    *get_info('npymath')['library_dirs'],
+    join(include_path, '..', '..', 'random', 'lib'), *get_info('npymath')['library_dirs'],
 ]
+
+platform_lib_dirs = {
+    "Linux": ["/usr/lib"],
+    "Darwin": ["/usr/local/opt/lapack/lib", "/usr/local/opt/openblas/lib"],
+    "Windows": [],
+}
+lib_dirs.extend(platform_lib_dirs[platform.system()])
+
+if conda_prefix := os.getenv("MAMBA_ROOT_PREFIX", None):
+    lib_dirs.append(f"{conda_prefix}/envs/pyhtnorm-dev/lib")
+
+
+if user_defined_libs_dir := os.getenv("PYHT_LIBS_DIR", None):
+    lib_dirs.append(user_defined_libs_dir)
+
+
 extensions = [
     Extension(
         "pyhtnorm._htnorm",
@@ -41,6 +55,5 @@ extensions = [
         extra_compile_args=compile_args,
     ),
 ]
-
 
 setup(ext_modules=extensions)

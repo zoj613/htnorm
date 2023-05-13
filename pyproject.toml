@@ -5,7 +5,9 @@ requires = [
     "setuptools>=61.0.0",
     "setuptools-scm[toml]>=6.2",
     "numpy==1.23.2; python_version>='3.11'",
-    "numpy==1.21.3; python_version<='3.10'",
+    "numpy==1.21.3; python_version=='3.10'",
+    "numpy==1.19.3; python_version=='3.9'",
+    "numpy==1.19.0; python_version=='3.8'",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -20,7 +22,7 @@ readme = "README.md"
 dynamic = ["version"]
 license = {text = "BSD 3-Clause License"}
 requires-python = ">=3.8"
-dependencies = ["numpy >= 1.18.0"]
+dependencies = ["numpy >= 1.19.0"]
 keywords = [
     'statistical sampling',
     'multivariate gaussian distribution',
@@ -61,3 +63,36 @@ write_to = "pyhtnorm/_version.py"
 
 [tool.coverage.run]
 plugins = ["Cython.Coverage"]
+
+
+[tool.cibuildwheel]
+skip = "pp3*"
+test-command = [
+    "cd ~",
+    """python -c '\
+    from pyhtnorm import hyperplane_truncated_mvnorm;\
+    import numpy as np;\
+    rng = np.random.default_rng();\
+    k1, k2 = 1000, 1;\
+    temp = rng.random((k1, k1));\
+    cov = temp @ temp.T;\
+    G = np.ones((k2, k1));\
+    r = np.zeros(k2);\
+    mean = rng.random(k1);\
+    o = hyperplane_truncated_mvnorm(mean, cov, G, r, random_state=rng);\
+    print(o.sum());\
+    hyperplane_truncated_mvnorm(mean, cov, G, r, out=o);'
+    """,
+]
+
+[tool.cibuildwheel.linux]
+before-all = "yum -y install lapack-devel openblas-devel"
+archs = ["auto64"]
+
+[tool.cibuildwheel.macos]
+before-all = "brew install openblas lapack"
+archs = ["auto64"]
+
+[[tool.cibuildwheel.overrides]]
+select = "*-musllinux*"
+before-all = "apk add openblas-dev lapack-dev"  # musllinux image uses apk instead of yum for package managament
