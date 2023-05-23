@@ -66,7 +66,7 @@ plugins = ["Cython.Coverage"]
 
 
 [tool.cibuildwheel]
-skip = "pp3*"
+skip = ["pp3*", "*-musllinux*"]
 test-command = [
     "cd ~",
     """python -c '\
